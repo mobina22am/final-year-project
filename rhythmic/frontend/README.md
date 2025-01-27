@@ -22,3 +22,6 @@ npm run lint
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
+
+
+# THERE IS A REQUIREMENT.TXT NEEDS TO BE RAN (pip install -r requirements.txt)
