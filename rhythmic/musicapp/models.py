@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
@@ -7,6 +8,20 @@ class User(AbstractUser):
     email = models.EmailField()
     birthday = models.DateField()
     password = models.CharField(max_length=100)
+    username = id
+
+
+    # this is to prevent any errors for overriding the abstract class
+    groups = models.ManyToManyField(
+        "auth.Group",
+        related_name="custom_user_set",
+        blank=True
+    )
+    user_permissions = models.ManyToManyField(
+        "auth.Permission",
+        related_name="custom_user_permissions_set",
+        blank=True
+    )
 
 
     def __str__(self):
@@ -19,9 +34,9 @@ class StoredSongs(models.Model):
     artist = models.CharField(max_length=100)
     details = models.TextField()
     notes = models.TextField()
-    instrument = models.CharField(max_length=100)
-    created_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    instrument = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
 
 
     def __str__(self):
