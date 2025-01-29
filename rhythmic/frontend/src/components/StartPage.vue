@@ -2,21 +2,30 @@
     <h1>WELCOME TO RHYTHMIC</h1>
 
     <div id="startPageButtons">
-        <router-link to="/login">
-            <button id="logInButton">Log in</button>
-        </router-link>
-        <router-link to="/signup">
-            <button id="signUpButton">Sign Up</button>
-        </router-link>
+        <button id="logInButton" @click="loginDirect">Log in</button>
+        <button id="signUpButton" @click="signUpDirect">Sign Up</button>
     </div>
 
 </template>
 
 
 <script>
+import router from '../router';
+
 export default{
-    name: 'StartPage'
-}
+    name: 'StartPage',
+
+    methods: {
+        loginDirect(){
+            router.push('/login');
+        },
+
+        signUpDirect(){
+            router.push('/signup');
+        }
+    }
+};
+
 </script>
 
 
