@@ -1,15 +1,14 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <TestObject/>
+  <StartPage/>
 </template>
 
 <script>
-import TestObject from './components/test.vue'
+import StartPage from './components/StartPage.vue';
 
 export default {
   name: 'App',
   components: {
-    TestObject
+    StartPage
   }
 }
 </script>

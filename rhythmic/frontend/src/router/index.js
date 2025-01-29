@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
-import TestObject from '../components/test.vue'
+import StartPage from '@/components/StartPage.vue';
 
 const routes = [
-  { path: '/', name: 'TestObject', component: TestObject }
+  { path: '', name: 'StartPage', component: StartPage }
 ];
 
 const router = createRouter({
