@@ -2,20 +2,41 @@
     <div>
         <h1>Sign Up</h1>
         <form method="post" @submit.prevent="submitForm">
-            <label for="username">Username:</label>
-            <input type="text" v-model="form.name" id="username" name="username">
 
-            <label for="birthday">Date Of Birth:</label>
-            <input type="date" v-model="form.birthday" id="birthday" name="birthday">
+            <div class="inputs">
+                <label for="name">Name:</label>
+                <input type="text" v-model="form.name" id="name" name="name" pattern="[A-Za-z0-9]{3,}" required>
+            </div>
 
-            <label for="email">Email:</label>
-            <input type="email" v-model="form.email" id="email" name="email">
+            <div class="inputs">
+                <label for="birthday">Date Of Birth:</label>
+                <input type="date" v-model="form.birthday" id="birthday" name="birthday" required>
+            </div>
 
-            <label for="password">Password:</label>
-            <input type="password" v-model="form.password" id="password" name="password">
 
-            <button type="button" id="back" @click="backFunction">Back</button>
-            <button type="submit" id="submit" @click="submitForm">Submit</button>
+            <div class="inputs">
+                <label for="email">Email:</label>
+                <input type="email" v-model="form.email" id="email" name="email" pattern="[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+"  required>
+            </div>
+
+
+            <div class="inputs">
+                <label for="password">Password:</label>
+                <input type="password" v-model="form.password" id="password" name="password" pattern="(?=.*\d)[A-Za-z\d]{6,}" required>
+            </div>
+
+
+            <div class="inputs">
+                <label for="confirmPassword">Confirm Password:</label>
+                <input type="password" v-model="form.confirmPassword" id="confirmPassword" name="confirmPassword" pattern="(?=.*\d)[A-Za-z\d]{6,}" required>
+            </div>
+
+
+            <div id="signUpButtons">
+                <button type="button" id="back" @click="backFunction">Back</button>
+                <button type="submit" id="submit" @click="submitForm">Submit</button>
+            </div>
+
         </form>
     </div>
 </template>
@@ -32,13 +53,42 @@ export default{
                 name: '',
                 birthday: '',
                 email: '',
-                password: ''
+                password: '',
+                confirmPassword: ''
             }
         };
     },
     methods: {
-        submitForm(){
-            console.log(this.form);
+
+        async submitForm(){
+
+            if(this.form.password !== this.form.confirmPassword){
+                alert('Passwords do not match');
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:8000/api/users/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(this.form)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert('User created successfully');
+                    router.push('/'); 
+                } 
+                
+                else {
+                    alert(data.error);
+                }
+            }
+
+            catch(error){
+                console.log(error);
+            }
         },
 
         backFunction(){
@@ -48,3 +98,68 @@ export default{
 };
 
 </script>
+
+
+
+<style scoped>
+
+h1{
+    font-size: 3em;
+    color: white;
+    margin-top: 1%;
+}
+
+form{
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-gap: 10px;
+    margin-top: 3%;
+}
+
+#signUpButtons{
+    display: grid;
+    grid-template-areas: 'back submit';
+    justify-content: center;
+    margin-top: 5%;
+    grid-gap: 35%;
+}
+
+#back, #submit{
+    background-color: #ffffff;
+    color: black;
+    border: none;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 20px;
+    cursor: pointer;
+    border-radius: 12px;
+}
+
+#back{
+    grid-area: back;
+}
+
+#submit{
+    grid-area: submit;
+}
+
+label{
+    color: white;
+    font-size: 20px;
+    margin-right: 4%;
+}
+
+input{
+    border-radius: 12px;
+    padding: 10px;
+    font-size: 20px;
+    border: none;
+}
+
+.inputs{
+    margin-top: 1.5%;
+}
+
+</style>
