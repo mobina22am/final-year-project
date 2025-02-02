@@ -43,6 +43,8 @@ INSTALLED_APPS = [
 ]
 
 
+# *************
+AUTH_USER_MODEL = 'musicapp.User'
 
 
 MIDDLEWARE = [

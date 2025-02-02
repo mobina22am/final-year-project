@@ -56,7 +56,7 @@ export default{
                 birthday: '',
                 email: '',
                 password: '',
-                confirmPassword: ''
+                confirmPassword: '',
             }
         };
     },
