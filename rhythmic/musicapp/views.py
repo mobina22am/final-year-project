@@ -6,11 +6,14 @@ from django.http import HttpResponse
 from django.contrib.auth.hashers import make_password
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
+from django.views.decorators.csrf import csrf_exempt
 import json
+from .models import User
 
 
 User = get_user_model()
 
+@csrf_exempt
 def UserSignUp(request):
 
     if request.method == "POST":
@@ -21,6 +24,14 @@ def UserSignUp(request):
         birthday = data["birthday"]
         password = data["password"]
         username = data["username"]
+
+
+        if User.objects.filter(email=email).exists():
+            return JsonResponse({"error": "Email already exists"})
+
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({"error": "Username already exists"})
+
 
         user = User.objects.create(
             name=name,

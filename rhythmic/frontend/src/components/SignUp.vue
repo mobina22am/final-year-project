@@ -43,6 +43,7 @@
 
 
 <script>
+import axios from 'axios';
 import router from '../router';
 
 export default{
@@ -51,6 +52,7 @@ export default{
         return{
             form: {
                 name: '',
+                username: '',
                 birthday: '',
                 email: '',
                 password: '',
@@ -68,23 +70,14 @@ export default{
             }
 
             try {
-                const response = await fetch('http://localhost:8000/api/users/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(this.form)
-                });
+                const response = await axios.post('http://localhost:8000/signup/', this.form);
 
-                const data = await response.json();
-
-                if (response.ok) {
+                if (response.status === 200){
                     alert('User created successfully');
-                    router.push('/'); 
+                    router.push('/login'); 
                 } 
-                
-                else {
-                    alert(data.error);
-                }
             }
+        
 
             catch(error){
                 console.log(error);

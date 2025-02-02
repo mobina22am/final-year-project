@@ -58,9 +58,7 @@ MIDDLEWARE = [
 ]
 
 # *************
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080",  # Add your frontend URL
-]
+CORS_ALLOW_ALL_ORIGINS = True
 
 ROOT_URLCONF = 'rhythmic.urls'
 
