@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div id="signUp">
         <h1>Sign Up</h1>
         <form method="post" @submit.prevent="submitForm">
 
@@ -11,6 +11,11 @@
             <div class="inputs">
                 <label for="birthday">Date Of Birth:</label>
                 <input type="date" v-model="form.birthday" id="birthday" name="birthday" required>
+            </div>
+
+            <div class="inputs">
+                <label for="username">Username:</label>
+                <input type="text" v-model="form.username" id="username" name="username" required>
             </div>
 
 
@@ -64,6 +69,8 @@ export default{
 
         async submitForm(){
 
+            event.preventDefault();
+
             if(this.form.password !== this.form.confirmPassword){
                 alert('Passwords do not match');
                 return;
@@ -72,15 +79,22 @@ export default{
             try {
                 const response = await axios.post('http://localhost:8000/signup/', this.form);
 
-                if (response.status === 200){
+                if (response.status === 201){
                     alert('User created successfully');
-                    router.push('/login'); 
+                    router.push('/');
                 } 
             }
         
 
             catch(error){
-                console.log(error);
+
+                if (error.response && error.response.data.error) {
+                    alert(error.response.data.error); // Show backend error message
+                } 
+                
+                else {
+                    alert('Signup failed. Please try again.');
+                }
             }
         },
 
@@ -96,24 +110,25 @@ export default{
 
 <style scoped>
 
+
 h1{
     font-size: 3em;
     color: white;
-    margin-top: 1%;
+    margin-top: 0;
 }
 
 form{
     display: grid;
     grid-template-columns: 1fr;
-    grid-gap: 10px;
-    margin-top: 3%;
+    grid-gap: 5px;
+    margin-top: 1%;
 }
 
 #signUpButtons{
     display: grid;
     grid-template-areas: 'back submit';
     justify-content: center;
-    margin-top: 5%;
+    margin-top: 3%;
     grid-gap: 35%;
 }
 

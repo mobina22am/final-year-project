@@ -27,25 +27,26 @@ def UserSignUp(request):
 
 
         if User.objects.filter(email=email).exists():
-            return JsonResponse({"error": "Email already exists"})
+            return JsonResponse({"error": "Email already exists"}, status=400)
 
         if User.objects.filter(username=username).exists():
-            return JsonResponse({"error": "Username already exists"})
+            return JsonResponse({"error": "Username already exists"}, status=400)
 
 
         user = User.objects.create(
-            name=name,
+            first_name=name,
             email=email,
             birthday=birthday,
-            password=make_password(password),
             username=username
         )
 
+        user.set_password(password)
+
         user.save()
 
-        return JsonResponse({"message": "User created successfully!"})
+        return JsonResponse({"message": "User created successfully!"}, status=201)
     
-    return JsonResponse({"message": "User not created!"})
+    return JsonResponse({"message": "User not created!"}, status=400)
 
 
 def home(request):
