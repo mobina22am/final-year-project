@@ -55,8 +55,7 @@ export default{
                     localStorage.setItem('token', response.data.token);
 
 
-                    // you have to add the home page here   
-                    router.push('/');
+                    router.push('/mainpage');
                 }
 
             }

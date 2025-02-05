@@ -84,7 +84,7 @@ export default{
 
                     localStorage.setItem('token', response.data.token);
 
-                    router.push('/');
+                    router.push('/homepage');
                 } 
             }
         
