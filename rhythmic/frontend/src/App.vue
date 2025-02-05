@@ -7,6 +7,18 @@
 export default {
   name: 'App',
   components: {
+  },
+
+  mounted() {
+    const token = localStorage.getItem('token');
+
+    if (token) {
+
+      // this is going to be the main page after the user is logges in (add it later)
+      this.$router.push('/');
+    } else {
+      this.$router.push('/');
+    }
   }
 }
 </script>

@@ -27,7 +27,7 @@
 
 
 <script>
-// import axios from 'axios';
+import axios from 'axios';
 import router from '../router';
 
 export default{
@@ -46,6 +46,30 @@ export default{
 
             event.preventDefault();
 
+            try{
+                const response = await axios.post('http://localhost:8000/login/', this.form, { withCredentials: true })
+
+                if(response.status === 200){
+                    alert('You have successfully logged in');
+
+                    localStorage.setItem('token', response.data.token);
+
+
+                    // you have to add the home page here   
+                    router.push('/');
+                }
+
+            }
+
+            catch(error){
+                if (error.response && error.response.data.error){
+                    alert(error.response.data.error);
+                }
+
+                else{
+                    alert("error during login");
+                }
+            }
         
         
         },

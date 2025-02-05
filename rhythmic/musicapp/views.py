@@ -1,7 +1,4 @@
-from django.shortcuts import render
-
 from django.http import HttpResponse
-
 # *************
 from django.contrib.auth import login, authenticate
 from django.http import JsonResponse
@@ -44,9 +41,47 @@ def UserSignUp(request):
 
         user.save()
 
-        return JsonResponse({"message": "User created successfully!"}, status=201)
+        user = authenticate(username=username, password=password)
+
+        if user:
+            login(request, user)
+            response = JsonResponse({"message": "User created successfully!"}, status=201)
+            response.set_cookie('token', username, httponly=True)
+            return response
     
     return JsonResponse({"message": "User not created!"}, status=400)
+
+
+@csrf_exempt
+def userLogin(request):
+
+    if request.method == "POST":
+
+        data = json.loads(request.body)
+        username = data["username"]
+        password = data["password"]
+
+        user = authenticate(username=username, password=password)
+
+        if user:
+            login(request, user)
+            response = JsonResponse({"message": "Logged in successfully!"}, status=200)
+            response.set_cookie('token', username, httponly=True)
+            return response
+        
+        else:
+            return JsonResponse({"error": "Invalid credentials"}, status=400)
+
+    return JsonResponse({"error": "Invalid method"}, status=405)
+
+
+
+
+@csrf_exempt
+def logout_view(request):
+    response = JsonResponse({"message": "Logged out successfully!"})
+    response.delete_cookie('token')
+    return response
 
 
 def home(request):

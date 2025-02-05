@@ -77,10 +77,13 @@ export default{
             }
 
             try {
-                const response = await axios.post('http://localhost:8000/signup/', this.form);
+                const response = await axios.post('http://localhost:8000/signup/', this.form, {withCredentials: true});
 
                 if (response.status === 201){
                     alert('User created successfully');
+
+                    localStorage.setItem('token', response.data.token);
+
                     router.push('/');
                 } 
             }

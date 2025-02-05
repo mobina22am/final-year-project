@@ -56,11 +56,32 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # *************
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware', 
+    'django.middleware.common.CommonMiddleware',
 ]
 
 # *************
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
+# *************
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8080", 
+]
+
+
+# *************
+CSRF_TRUSTED_ORIGINS = ["http://localhost:8080"]
+
+
+# *************
+CORS_ALLOW_HEADERS = [
+    'content-type',
+    'authorization',
+    'x-requested-with',
+    'accept',
+    'origin',
+]
+
 
 ROOT_URLCONF = 'rhythmic.urls'
 
