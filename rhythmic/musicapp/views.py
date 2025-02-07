@@ -1,6 +1,6 @@
 from django.http import HttpResponse
 # *************
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, logout, authenticate
 from django.http import JsonResponse
 from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
@@ -34,19 +34,19 @@ def UserSignUp(request):
             first_name=name,
             email=email,
             birthday=birthday,
-            username=username
+            username=username,
         )
 
         user.set_password(password)
-
         user.save()
 
         user = authenticate(username=username, password=password)
 
         if user:
             login(request, user)
+            request.session.create()
             response = JsonResponse({"message": "User created successfully!"}, status=201)
-            response.set_cookie('token', username, httponly=True)
+            response.set_cookie(key="token", value=user.username, httponly=True, secure=True, samesite='None') 
             return response
     
     return JsonResponse({"message": "User not created!"}, status=400)
@@ -65,8 +65,9 @@ def userLogin(request):
 
         if user:
             login(request, user)
+            request.session.create()
             response = JsonResponse({"message": "Logged in successfully!"}, status=200)
-            response.set_cookie('token', username, httponly=True)
+            response.set_cookie(key="token", value=user.username, httponly=True, secure=True, samesite='None')
             return response
         
         else:
@@ -78,10 +79,57 @@ def userLogin(request):
 
 
 @csrf_exempt
-def logout_view(request):
+def logoutView(request):
+    logout(request)
     response = JsonResponse({"message": "Logged out successfully!"})
     response.delete_cookie('token')
     return response
+
+
+
+@csrf_exempt
+def updateProfile(request):
+
+    if request.method == "PUT":
+
+        if not request.user.is_authenticated:
+            return JsonResponse({"error": "You are not logged in"}, status=401)
+
+        data = json.loads(request.body)
+        user = request.user
+
+        user.first_name = data["name"]
+        user.email = data["email"]  
+        user.birthday = data["birthday"]
+        user.username = data["username"]
+
+        if user.check_password(data["oldPassword"]):
+            pass
+        
+        else:
+            return JsonResponse({"error": "Invalid password"}, status=400)
+
+        if "password" in data:
+            user.set_password(data["password"])
+
+
+
+        user.save()
+
+        response = JsonResponse({"message": "Profile updated successfully!"}, status=200)
+        response.set_cookie(key="token", value=request.session.session_key , httponly=True, secure=True, samesite='None')
+        return response
+    
+
+    if request.method == "GET":
+        if not request.user.is_authenticated:
+            return JsonResponse({"error": "You are not logged in"}, status=401)
+        
+        user = request.user
+        return JsonResponse({"name": user.first_name, "email": user.email, "birthday": user.birthday, "username": user.username}, status=200)
+
+
+    return JsonResponse({"error": "Invalid method"}, status=405)
 
 
 def home(request):

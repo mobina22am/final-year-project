@@ -1,6 +1,6 @@
 <template>
-    <div id="signUp">
-        <h1>Sign Up</h1>
+    <div id="profile">
+        <h1>Profile</h1>
         <form method="post" @submit.prevent="submitForm">
 
             <div class="inputs">
@@ -26,20 +26,26 @@
 
 
             <div class="inputs">
-                <label for="password">Password:</label>
-                <input type="password" v-model="form.password" id="password" name="password" pattern="(?=.*\d)[A-Za-z\d]{6,}" required>
+                <label for="password">New Password: (optional)</label>
+                <input type="password" v-model="form.password" id="password" name="password" pattern="(?=.*\d)[A-Za-z\d]{6,}">
             </div>
 
 
             <div class="inputs">
-                <label for="confirmPassword">Confirm Password:</label>
-                <input type="password" v-model="form.confirmPassword" id="confirmPassword" name="confirmPassword" pattern="(?=.*\d)[A-Za-z\d]{6,}" required>
+                <label for="confirmPassword">Confirm New Password:</label>
+                <input type="password" v-model="form.confirmPassword" id="confirmPassword" name="confirmPassword" pattern="(?=.*\d)[A-Za-z\d]{6,}">
+            </div>
+
+
+            <div class="inputs">
+                <label for="password">Old Password:</label>
+                <input type="password" v-model="form.oldPassword" id="oldPassword" name="password" pattern="(?=.*\d)[A-Za-z\d]{6,}" required>
             </div>
 
 
             <div id="signUpButtons">
                 <button type="button" id="back" @click="backFunction">Back</button>
-                <button type="submit" id="submit" @click="submitForm">Submit</button>
+                <button type="submit" id="submit" @click="submitForm">Update</button>
             </div>
 
         </form>
@@ -52,7 +58,7 @@ import axios from 'axios';
 import router from '../router';
 
 export default{
-    name: 'SignUp',
+    name: 'UpdateProfile',
     data(){
         return{
             form: {
@@ -62,9 +68,34 @@ export default{
                 email: '',
                 password: '',
                 confirmPassword: '',
+                oldPassword: '',
             }
         };
     },
+
+
+    async mounted() {
+        try {
+            const response = await axios.get('http://localhost:8000/profile/', {withCredentials: true});
+
+            this.form = response.data;
+
+            if (response.status === 200) {
+                this.form = response.data;
+            }
+        } 
+
+        catch (error) {
+            if (error.response && error.response.data.error) {
+                alert(error.response.data.error); // Show backend error message
+            } 
+            
+            else {
+                alert('Profile retrieval failed. Please try again.');
+            }
+        }
+    },
+
     methods: {
 
         async submitForm(){
@@ -77,15 +108,30 @@ export default{
             }
 
             try {
-                const response = await axios.post('http://localhost:8000/signup/', this.form, {withCredentials: true});
 
-                if (response.status === 201){
-                    alert('User created successfully');
+                const newData = {
+                    name: this.form.name,
+                    username: this.form.username,
+                    birthday: this.form.birthday,
+                    email: this.form.email,
+                    oldPassword: this.form.oldPassword,
+                };
 
-                    localStorage.setItem('token', response.data.token);
+                if (this.form.password) {
+                    newData.password = this.form.password;
+                }
+
+                const response = await axios.put('http://localhost:8000/profile/', newData, {withCredentials: true});
+
+                if (response.status === 200){
+                    alert('Profile Update successfully');
 
                     router.push('/mainpage');
                 } 
+
+                if (response.status === 400){
+                    alert('Old password is incorrect');
+                }
             }
         
 
@@ -96,7 +142,7 @@ export default{
                 } 
                 
                 else {
-                    alert('Signup failed. Please try again.');
+                    alert('Update failed. Please try again.');
                 }
             }
         },
