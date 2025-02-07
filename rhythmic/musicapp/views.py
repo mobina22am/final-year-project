@@ -44,9 +44,13 @@ def UserSignUp(request):
 
         if user:
             login(request, user)
+
             request.session.create()
-            response = JsonResponse({"message": "User created successfully!"}, status=201)
-            response.set_cookie(key="token", value=user.username, httponly=True, secure=True, samesite='None') 
+
+            response = JsonResponse({"message": "User created successfully!", "token": request.session.session_key}, status=201)
+            response.set_cookie(key="token", value=request.session.session_key, httponly=True, secure=True, samesite='None') 
+
+
             return response
     
     return JsonResponse({"message": "User not created!"}, status=400)
@@ -65,25 +69,20 @@ def userLogin(request):
 
         if user:
             login(request, user)
+
             request.session.create()
-            response = JsonResponse({"message": "Logged in successfully!"}, status=200)
-            response.set_cookie(key="token", value=user.username, httponly=True, secure=True, samesite='None')
+
+
+            response = JsonResponse({"message": "Logged in successfully!", "token": request.session.session_key}, status=200)
+            response.set_cookie(key="token", value=request.session.session_key, httponly=True, secure=True, samesite='None')
+
+
             return response
         
         else:
             return JsonResponse({"error": "Invalid credentials"}, status=400)
 
     return JsonResponse({"error": "Invalid method"}, status=405)
-
-
-
-
-@csrf_exempt
-def logoutView(request):
-    logout(request)
-    response = JsonResponse({"message": "Logged out successfully!"})
-    response.delete_cookie('token')
-    return response
 
 
 
@@ -103,21 +102,23 @@ def updateProfile(request):
         user.birthday = data["birthday"]
         user.username = data["username"]
 
+
         if user.check_password(data["oldPassword"]):
             pass
-        
+
         else:
             return JsonResponse({"error": "Invalid password"}, status=400)
 
         if "password" in data:
             user.set_password(data["password"])
 
-
-
         user.save()
 
-        response = JsonResponse({"message": "Profile updated successfully!"}, status=200)
+        request.session.create()
+
+        response = JsonResponse({"message": "Profile updated successfully!", "token": request.session.session_key}, status=200)
         response.set_cookie(key="token", value=request.session.session_key , httponly=True, secure=True, samesite='None')
+
         return response
     
 
@@ -130,6 +131,15 @@ def updateProfile(request):
 
 
     return JsonResponse({"error": "Invalid method"}, status=405)
+
+
+
+@csrf_exempt
+def logoutView(request):
+    response = JsonResponse({"message": "Logged out successfully!"})
+    response.delete_cookie('token')
+    logout(request)
+    return response
 
 
 def home(request):
