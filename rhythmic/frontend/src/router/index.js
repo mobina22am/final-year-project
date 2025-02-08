@@ -5,6 +5,8 @@ import SignUp from '@/components/SignUp.vue';
 import Login from '@/components/LogIn.vue';
 import MainPage from '@/components/MainPage.vue';
 import Profile from '@/components/UpdateProfile.vue';
+import GetNotes from '@/components/GetNotes.vue';
+import FindASong from '@/components/FindASong.vue'; 
 
 const routes = [
   { path: '/', name: 'StartPage', component: StartPage },
@@ -12,6 +14,8 @@ const routes = [
   { path: '/login', name: 'LogIn', component: Login},
   { path: '/mainpage', name: 'MainPage', component: MainPage},
   { path: '/profile', name: 'Profile', component: Profile},
+  { path: '/getnotes', name: 'GetNotes', component: GetNotes},
+  { path: '/findasong', name: 'FindASong', component: FindASong},
 ];
 
 const router = createRouter({

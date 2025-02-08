@@ -13,14 +13,33 @@
             </button>
         </div>
 
-        <h1>Welcome {{ user }}</h1>
+        <h1>Find A Song</h1>
 
         <form>
 
-            <div id="homeButtons">
-                <button type="button" id="notes" @click="getNotes">Get Notes</button>
-                <button type="button" id="folders" @click="accessFolders">Access Folsers</button>
-            </div>
+            <input type="text" placeholder="Type In The Song Detail" id="searchInput" required>
+
+                <table id="songsTable">
+                    <tr id="tableHeader">
+                        <th><p id="tableHeader1">name of the song</p></th>
+                        <th><p id="tableHeader2">name of the artist</p></th>
+                    </tr>
+
+                    <tr>
+                        <button type="button" class="songs" @click="songChosen">
+                            <td><p>song name</p></td>
+                            <td><p>artist name</p></td>
+                        </button>
+                    </tr>
+                    <tr>
+                        <button type="button" class="songs" @click="songChosen">
+                            <td><p>song name</p></td>
+                            <td><p>artist name</p></td>
+                        </button>
+                    </tr>
+                </table>
+                
+            <button type="button" id="search" @click="search">Search</button>
 
         </form>
 
@@ -31,25 +50,9 @@
 <script>
 
 export default {
-    name: 'MainPage',
-
-    data(){
-        return{
-            user: ''
-        }
-    },
-
-    mounted(){
-        this.user = localStorage.getItem('name');
-    },
+    name: 'FindASong',
 
     methods: {
-        getNotes(){
-            this.$router.push('/getnotes');
-        },
-        accessFolders(){
-            this.$router.push('/folders');
-        },
 
         logout(){
             localStorage.removeItem('token');
@@ -65,15 +68,11 @@ export default {
 </script>
 
 
-
-
-
-
 <style scoped>
 
 
 h1{
-    font-size: 4em;
+    font-size: 50px;
     color: white;
     margin-top: 0;
 }
@@ -81,37 +80,36 @@ h1{
 form{
     display: grid;
     grid-template-columns: 1fr;
-    grid-gap: 55px;
     margin-top: 5%;
-}
-
-#homeButtons{
     display: grid;
-    grid-template-areas: 'notes' 'folders';
+    grid-template-areas: 'searchInput' 'search';
     justify-content: center;
-    margin-top: 7%;
-    grid-gap: 90%;
 }
 
-#notes, #folders{
+#searchInput, #search{
     background-color: #ffffff;
     color: black;
     border: none;
     padding: 15px 32px;
     text-align: center;
     text-decoration: none;
-    display: inline-block;
-    font-size: 30px;
     cursor: pointer;
     border-radius: 18px;
 }
 
-#folders{
-    grid-area: folders;
+#search{
+    grid-area: search;
+    font-size: 30px;
+    position: absolute;
+    bottom: 0;
+    margin-bottom: 20px;
+    width: 25%;
+    left: 37.5%;
 }
 
-#notes{
-    grid-area: notes;
+#searchInput{
+    grid-area: searchInput;
+    font-size: 20px;
 }
 
 #logout{
@@ -140,6 +138,21 @@ form{
     position: absolute;
     top: 0;
     right: 0;
+}
+
+#songsTable{
+    color: black;
+    border: none;
+    text-decoration: none;
+    cursor: pointer;
+    width: 100%;
+}
+
+#tableHeader{
+    color: black;
+    border: none;
+    padding: 15px 32px;
+    font-size: 20px;
 }
 
 </style>

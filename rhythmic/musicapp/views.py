@@ -47,7 +47,7 @@ def UserSignUp(request):
 
             request.session.create()
 
-            response = JsonResponse({"message": "User created successfully!", "token": request.session.session_key}, status=201)
+            response = JsonResponse({"message": "User created successfully!", "token": request.session.session_key, "name": user.first_name}, status=201)
             response.set_cookie(key="token", value=request.session.session_key, httponly=True, secure=True, samesite='None') 
 
 
@@ -73,7 +73,7 @@ def userLogin(request):
             request.session.create()
 
 
-            response = JsonResponse({"message": "Logged in successfully!", "token": request.session.session_key}, status=200)
+            response = JsonResponse({"message": "Logged in successfully!", "token": request.session.session_key, "name": user.first_name}, status=200)
             response.set_cookie(key="token", value=request.session.session_key, httponly=True, secure=True, samesite='None')
 
 
@@ -116,7 +116,7 @@ def updateProfile(request):
 
         request.session.create()
 
-        response = JsonResponse({"message": "Profile updated successfully!", "token": request.session.session_key}, status=200)
+        response = JsonResponse({"message": "Profile updated successfully!", "token": request.session.session_key, "name":user.first_name}, status=200)
         response.set_cookie(key="token", value=request.session.session_key , httponly=True, secure=True, samesite='None')
 
         return response

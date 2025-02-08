@@ -53,7 +53,7 @@ export default{
                     alert('You have successfully logged in');
 
                     localStorage.setItem('token', response.data.token);
-
+                    localStorage.setItem('name', response.data.name);
 
                     router.push('/mainpage');
                 }

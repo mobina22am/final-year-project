@@ -13,13 +13,13 @@
             </button>
         </div>
 
-        <h1>Welcome {{ user }}</h1>
+        <h1>Get Notes</h1>
 
         <form>
 
-            <div id="homeButtons">
-                <button type="button" id="notes" @click="getNotes">Get Notes</button>
-                <button type="button" id="folders" @click="accessFolders">Access Folsers</button>
+            <div id="getNotesButtons">
+                <button type="button" id="find" @click="findASong">Find A Song</button>
+                <button type="button" id="suggest" @click="suggestASong">Suggest A Song</button>
             </div>
 
         </form>
@@ -31,24 +31,15 @@
 <script>
 
 export default {
-    name: 'MainPage',
-
-    data(){
-        return{
-            user: ''
-        }
-    },
-
-    mounted(){
-        this.user = localStorage.getItem('name');
-    },
+    name: 'GetNotes',
 
     methods: {
-        getNotes(){
-            this.$router.push('/getnotes');
-        },
-        accessFolders(){
-            this.$router.push('/folders');
+        findASong(){
+            this.$router.push('/findasong');
+        },  
+
+        suggestASong(){
+            this.$router.push('/suggestasong');
         },
 
         logout(){
@@ -63,10 +54,6 @@ export default {
 }
 
 </script>
-
-
-
-
 
 
 <style scoped>
@@ -85,15 +72,15 @@ form{
     margin-top: 5%;
 }
 
-#homeButtons{
+#getNotesButtons{
     display: grid;
-    grid-template-areas: 'notes' 'folders';
+    grid-template-areas: 'find' 'suggest';
     justify-content: center;
     margin-top: 7%;
     grid-gap: 90%;
 }
 
-#notes, #folders{
+#find, #suggest{
     background-color: #ffffff;
     color: black;
     border: none;
@@ -106,12 +93,12 @@ form{
     border-radius: 18px;
 }
 
-#folders{
-    grid-area: folders;
+#suggest{
+    grid-area: suggest;
 }
 
-#notes{
-    grid-area: notes;
+#find{
+    grid-area: find;
 }
 
 #logout{

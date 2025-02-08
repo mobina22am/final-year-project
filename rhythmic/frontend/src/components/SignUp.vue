@@ -83,6 +83,7 @@ export default{
                     alert('User created successfully');
 
                     localStorage.setItem('token', response.data.token);
+                    localStorage.setItem('name', response.data.name);
 
                     router.push('/mainpage');
                 } 

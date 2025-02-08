@@ -126,6 +126,9 @@ export default{
                 if (response.status === 200){
                     alert('Profile Update successfully');
 
+                    localStorage.setItem('token', response.data.token);
+                    localStorage.setItem('name', response.data.name);
+
                     router.push('/mainpage');
                 } 
 
