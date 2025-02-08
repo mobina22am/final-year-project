@@ -15,33 +15,36 @@
 
         <h1>Find A Song</h1>
 
-        <form>
-
-            <input type="text" placeholder="Type In The Song Detail" id="searchInput" required>
-
-                <table id="songsTable">
-                    <tr id="tableHeader">
-                        <th><p id="tableHeader1">name of the song</p></th>
-                        <th><p id="tableHeader2">name of the artist</p></th>
-                    </tr>
-
-                    <tr>
-                        <button type="button" class="songs" @click="songChosen">
-                            <td><p>song name</p></td>
-                            <td><p>artist name</p></td>
-                        </button>
-                    </tr>
-                    <tr>
-                        <button type="button" class="songs" @click="songChosen">
-                            <td><p>song name</p></td>
-                            <td><p>artist name</p></td>
-                        </button>
-                    </tr>
-                </table>
-                
-            <button type="button" id="search" @click="search">Search</button>
-
+        <form @submit.prevent="search">
+            <input type="text" v-model="userInput" placeholder="Type In The Song Detail" id="searchInput" required>
+            <button type="submit" id="search">Search</button>
         </form>
+
+        <div id="tableDiv">
+            <table v-if="songs.length > 0" id="songsTable">
+
+                <thead>
+                    <tr>
+                        <div id="headerDiv">
+                            <th id="tableHeader1">Song</th>
+                            <th id="tableHeader2">Artist</th>
+                        </div>
+                    </tr>
+                </thead>
+
+                <tbody> 
+                    <tr v-for="(song, index) in songs" :key="index">
+                        <td colspan="2">
+                            <button type="button" class="songs" @click="songChosen(song)">
+                                <p>{{ song.name }}</p>
+                                <p>{{ song.artist }}</p>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
 
     </div>
 </template>
@@ -52,7 +55,62 @@
 export default {
     name: 'FindASong',
 
+    data(){
+        return{
+            userInput: '',
+            songs: [],
+            apiToken: ''
+        }
+    },
+
+    async mounted(){
+        this.apiToken = await this.getSpotifyToken();
+    },
+
+
     methods: {
+
+        async search(){
+            if (this.userInput === ''){
+                return;
+            }
+
+            if (this.apiToken === ''){
+                this.apiToken = await this.getSpotifyToken();
+            }
+
+            const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(this.userInput)}&type=track&limit=50`, { headers: { Authorization: `Bearer ${this.apiToken}` }});
+
+            const data = await response.json();
+
+            if (data.tracks && data.tracks.items) {
+                this.songs = data.tracks.items.map(track => ({name: track.name, artist: track.artists.map(artist => artist.name).join(', ')}));
+            } 
+            
+            else {
+                this.songs = [];
+            }
+
+        },
+
+        async getSpotifyToken() {
+            const clientId = '14d9c89768f742eba1002eee652142c1';
+            const clientSecret = '3899528fce97481cb861f4c058fc44fe';
+            const response = await fetch('https://accounts.spotify.com/api/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ grant_type: 'client_credentials', client_id: clientId, client_secret: clientSecret })
+            });
+
+            const data = await response.json();
+            return data.access_token;
+        },
+
+
+        songChosen(song){
+            alert(`You have chosen ${song.name} by ${song.artist}`);
+        },
+
 
         logout(){
             localStorage.removeItem('token');
@@ -72,7 +130,7 @@ export default {
 
 
 h1{
-    font-size: 50px;
+    font-size: 30px;
     color: white;
     margin-top: 0;
 }
@@ -80,7 +138,6 @@ h1{
 form{
     display: grid;
     grid-template-columns: 1fr;
-    margin-top: 5%;
     display: grid;
     grid-template-areas: 'searchInput' 'search';
     justify-content: center;
@@ -140,19 +197,75 @@ form{
     right: 0;
 }
 
+
+#tableDiv {
+    width: 100%; 
+    margin: auto; 
+    max-height: 370px;
+    overflow-y: auto;
+    margin-top: 2%;
+    display: block;
+    border-radius: 27px;
+}
+
+#tableDiv::-webkit-scrollbar {
+    display: none;
+    scrollbar-width: none;
+}
+
 #songsTable{
-    color: black;
     border: none;
     text-decoration: none;
     cursor: pointer;
+    justify-content: center;
     width: 100%;
 }
 
-#tableHeader{
-    color: black;
+.songs {
+    width: 100%;
+    background-color: #ffffff;
     border: none;
-    padding: 15px 32px;
-    font-size: 20px;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    border-radius: 20px;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+.songs:hover {
+    background-color: #e0e0e0;
+}
+
+td {
+    padding: 0;
+}
+
+thead{
+    position: sticky;
+    top: 0;
+    color: white;
+}
+
+#headerDiv{
+    border-collapse: collapse;
+    background-color: black;
+    border-radius: 20px;
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    padding-left: 30px;
+    padding-right: 30px;
+    font-size: 18px;
+}
+
+#tableHeader1{
+    text-align: left;
+}
+
+#tableHeader2{
+    text-align: right;
 }
 
 </style>
