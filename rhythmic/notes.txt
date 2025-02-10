@@ -1,23 +1,34 @@
-class User(AbstractUser):
-    name = models.CharField(max_length=100)
-    email = models.EmailField()
-    birthday = models.DateField()
-    password = models.CharField(max_length=100)
-    username = id
 
 
-    # this is to prevent any errors for overriding the abstract class
-    groups = models.ManyToManyField(
-        "auth.Group",
-        related_name="custom_user_set",
-        blank=True
-    )
-    user_permissions = models.ManyToManyField(
-        "auth.Permission",
-        related_name="custom_user_permissions_set",
-        blank=True
-    )
+
+https://accounts.spotify.com/authorize?client_id=14d9c89768f742eba1002eee652142c1&response_type=code&redirect_uri=http://localhost:8000/callback&scope=user-read-private user-read-email user-library-read
 
 
-    def __str__(self):
-        return f"{self.name}"
+
+
+curl -X POST "https://accounts.spotify.com/api/token" \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    -d "grant_type=authorization_code" \
+    -d "code=AQBykrKoRuxPOhcy_OL_PffCNLdr_JBJPjR_6B54YTmK75fIpC4ez7hdudqSo6P-8zPbdxtlbDXZGe9Hcv17dooPWb1F0i_uTHks9Rw-xRFPrQOLE3Nn5B3Cal6BucrmkVQkyDPYK7yN-BBmYkZGh0Pe6YffGqqvfZtq22URHHGRKX_fYpFeXXgQhWxMrETH74482qB6uKLd5FKABTnbFapiD-9DxHiLc0lpDHcy-J0W-LEaw_3Wi9E" \
+    -d "redirect_uri=http://localhost:8000/callback" \
+    -d "client_id=14d9c89768f742eba1002eee652142c1" \
+    -d "client_secret=3899528fce97481cb861f4c058fc44fe"
+
+
+
+
+
+    {"access_token":"BQA0DgNU6Jp0v7zaTrx52Zn2azhiec4S7IW5sc2XJoUIS5Uuf6h8FfNf4ptdllSz5wWSJWLjSPDEIA28Z3HMH45cs9Ubwow-Olg5Sv6b4Ko7oWdHCqjYOB2MLPyO7FjDYWa0TC1fHUok5VvZJLnElQp7rgQSJUs1yv-4IE-PKYJdYareD23LAjE4OqbzC7NlHAjy4jdM0vKbIsa5ekKw_wppG0dQBftmx0Tg_Nvv-Swylg7Rx3IdEclBekNhTkiKVqrc",
+    "token_type":"Bearer",
+    "expires_in":3600,"
+    refresh_token":"AQDL_q4VFCEoM2Q5kiF2JKC_u3ASdZz7XGcQpiM7ATf9njO8ICahaDD3VPah9dQTD2quTcnJUQuPGamuihRCxt2h9H8ikL8Nh0HHwL3vK48HiqZa1m4wM8I1cs-4uikXwWk",
+    "scope":"user-library-read user-read-email user-read-private"}% 
+
+
+
+    curl -X POST "https://accounts.spotify.com/api/token" \
+    -H "Content-Type: application/x-www-form-urlencoded" \
+    -d "grant_type=refresh_token" \
+    -d "refresh_token=AQDL_q4VFCEoM2Q5kiF2JKC_u3ASdZz7XGcQpiM7ATf9njO8ICahaDD3VPah9dQTD2quTcnJUQuPGamuihRCxt2h9H8ikL8Nh0HHwL3vK48HiqZa1m4wM8I1cs-4uikXwWk" \
+    -d "client_id=14d9c89768f742eba1002eee652142c1" \
+    -d "client_secret=3899528fce97481cb861f4c058fc44fe"

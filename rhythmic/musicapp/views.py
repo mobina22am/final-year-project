@@ -10,6 +10,8 @@ import json
 import librosa
 import numpy as np
 import requests
+from io import BytesIO
+import soundfile as sf
 
 
 
@@ -145,20 +147,22 @@ def findInstruments(request):
 
         try:
             data = json.loads(request.body)
-            audio_url = data.get("audio_url")
+            audioUrl = data.get("audio_url")
 
-            if not audio_url:
+            if not audioUrl:
                 return JsonResponse({"error": "No audio file found"}, status=400)
             
-            response = requests.get(audio_url)
+            response = requests.get(audioUrl)
 
             if response.status_code != 200:
                 return JsonResponse({"error": "Failed to download audio"}, status=400)
+            
+            audioFile = BytesIO(response.content)
 
-            y, sr = librosa.load(librosa.util.buf_to_float(response.content, dtype=np.float32))
+            y, sr = librosa.load(audioFile, sr=None)
 
-            spectral = librosa.feature.spectral_centroid(y=y, sr=sr)
-            rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr)
+            spectral = librosa.feature.spectral_centroid(y=y, sr=sr)[0]
+            rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr)[0]
             
             foundInstruments = []
             if np.mean(spectral) > 5000:
