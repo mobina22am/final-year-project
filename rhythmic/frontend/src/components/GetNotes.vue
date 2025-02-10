@@ -1,5 +1,8 @@
 <template>
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    <head>
+        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    </head>
 
     <div id="home">
 
@@ -20,6 +23,7 @@
             <div id="getNotesButtons">
                 <button type="button" id="find" @click="findASong">Find A Song</button>
                 <button type="button" id="suggest" @click="suggestASong">Suggest A Song</button>
+                <button type="button" id="back" @click="back">Back</button>
             </div>
 
         </form>
@@ -49,6 +53,10 @@ export default {
 
         profile(){
             this.$router.push('/profile');
+        },
+
+        back(){
+            this.$router.push('/mainpage');
         }
     }
 }
@@ -74,13 +82,13 @@ form{
 
 #getNotesButtons{
     display: grid;
-    grid-template-areas: 'find' 'suggest';
+    grid-template-areas: 'find' 'suggest' 'back';
     justify-content: center;
-    margin-top: 7%;
-    grid-gap: 90%;
+    margin-top: 3%;
+    grid-gap: 40%;
 }
 
-#find, #suggest{
+#find, #suggest, #back{
     background-color: #ffffff;
     color: black;
     border: none;

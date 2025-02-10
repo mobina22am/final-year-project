@@ -1,3 +1,4 @@
+from urllib import request
 from django.http import HttpResponse
 # *************
 from django.contrib.auth import login, logout, authenticate
@@ -6,6 +7,10 @@ from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
 from .models import User
 import json
+import librosa
+import numpy as np
+import requests
+
 
 
 User = get_user_model()
@@ -131,6 +136,41 @@ def updateProfile(request):
 
 
     return JsonResponse({"error": "Invalid method"}, status=405)
+
+
+@csrf_exempt
+def findInstruments(request):
+
+    if request.method == "POST":
+
+        try:
+            data = json.loads(request.body)
+            audio_url = data.get("audio_url")
+
+            if not audio_url:
+                return JsonResponse({"error": "No audio file found"}, status=400)
+            
+            response = requests.get(audio_url)
+
+            if response.status_code != 200:
+                return JsonResponse({"error": "Failed to download audio"}, status=400)
+
+            y, sr = librosa.load(librosa.util.buf_to_float(response.content, dtype=np.float32))
+
+            spectral = librosa.feature.spectral_centroid(y=y, sr=sr)
+            rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr)
+            
+            foundInstruments = []
+            if np.mean(spectral) > 5000:
+                foundInstruments.append("Electric Guitar")
+            if np.mean(rolloff) < 3000:
+                foundInstruments.append("Acoustic Guitar")
+            if np.mean(spectral) < 2000:
+                foundInstruments.append("Piano")
+
+            return JsonResponse({"instruments": foundInstruments})
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
 
 
 

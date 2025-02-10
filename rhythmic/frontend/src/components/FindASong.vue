@@ -1,5 +1,8 @@
 <template>
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    <head>
+        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    </head>
 
     <div id="home">
 
@@ -17,7 +20,8 @@
 
         <form @submit.prevent="search">
             <input type="text" v-model="userInput" placeholder="Type In The Song Detail" id="searchInput" required>
-            <button type="submit" id="search">Search</button>
+            <button type="button" id="back" @click="back" class="findASongButtons">Back</button>
+            <button type="submit" id="search" class="findASongButtons">Search</button>
         </form>
 
         <div id="tableDiv">
@@ -43,9 +47,7 @@
                     </tr>
                 </tbody>
             </table>
-
         </div>
-
     </div>
 </template>
 
@@ -107,10 +109,29 @@ export default {
         },
 
 
-        songChosen(song){
-            alert(`You have chosen ${song.name} by ${song.artist}`);
+        async songChosen(song){
+            try {
+                const response = await fetch("http://localhost:8000/findInstruments", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ audio_url: song.preview_url })
+                });
+
+                const data = await response.json();
+                song.instruments = data.instruments || [];
+
+                localStorage.setItem("song", JSON.stringify(song));
+                this.$router.push('/chooseinstrument');
+            } 
+            
+            catch (error) {
+                console.error("Error in finding instruments:", error);
+            }
         },
 
+        back(){
+            this.$router.push('/getnotes');
+        },
 
         logout(){
             localStorage.removeItem('token');
@@ -143,7 +164,7 @@ form{
     justify-content: center;
 }
 
-#searchInput, #search{
+#searchInput, #search, #back{
     background-color: #ffffff;
     color: black;
     border: none;
@@ -154,14 +175,21 @@ form{
     border-radius: 18px;
 }
 
-#search{
+.findASongButtons{
     grid-area: search;
-    font-size: 30px;
-    position: absolute;
-    bottom: 0;
-    margin-bottom: 20px;
     width: 25%;
-    left: 37.5%;
+    margin-bottom: 20px;
+    font-size: 30px;
+    bottom: 0;
+    position: absolute;
+}
+
+#back{
+    left: 20%;
+}
+
+#search{
+    right: 20%;
 }
 
 #searchInput{
@@ -196,7 +224,6 @@ form{
     top: 0;
     right: 0;
 }
-
 
 #tableDiv {
     width: 100%; 

@@ -6,7 +6,8 @@ import Login from '@/components/LogIn.vue';
 import MainPage from '@/components/MainPage.vue';
 import Profile from '@/components/UpdateProfile.vue';
 import GetNotes from '@/components/GetNotes.vue';
-import FindASong from '@/components/FindASong.vue'; 
+import FindASong from '@/components/FindASong.vue';
+import ChooseInstrument from '@/components/ChooseInstrument.vue'; 
 
 const routes = [
   { path: '/', name: 'StartPage', component: StartPage },
@@ -16,6 +17,7 @@ const routes = [
   { path: '/profile', name: 'Profile', component: Profile},
   { path: '/getnotes', name: 'GetNotes', component: GetNotes},
   { path: '/findasong', name: 'FindASong', component: FindASong},
+  { path: '/chooseinstrument', name: 'ChooseInstrument', component: ChooseInstrument},
 ];
 
 const router = createRouter({
