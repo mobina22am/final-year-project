@@ -1,4 +1,3 @@
-from urllib import request
 from django.http import HttpResponse
 # *************
 from django.contrib.auth import login, logout, authenticate
@@ -8,13 +7,16 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import User
 import json
 import librosa
+import pretty_midi
 import numpy as np
 import requests
 from io import BytesIO
-import soundfile as sf
+import yt_dlp
+import subprocess
+import os
 
 
-
+ytUrl = "https://www.youtube.com/results?search_query="
 User = get_user_model()
 
 @csrf_exempt
@@ -140,42 +142,139 @@ def updateProfile(request):
     return JsonResponse({"error": "Invalid method"}, status=405)
 
 
+def searchSongLink(songName, artistName):
+
+    query = f"{songName} {artistName} official audio"
+    songUrl = ytUrl + "+".join(query.split())
+
+    response = requests.get(songUrl)
+
+    if "watch?v=" in response.text:
+        video_id = response.text.split("watch?v=")[1].split('"')[0]
+        return f"https://www.youtube.com/watch?v={video_id}"
+    return None
+
+
+def downloadSongAudio(youtubeLink):
+    """Downloads the YouTube audio and saves it as an MP3."""
+    outputPath = "songs/%(title)s.%(ext)s"
+
+    ydlOpts = {
+        'format': 'bestaudio/best',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192',
+        }],
+        'outtmpl': outputPath,
+    }
+
+    with yt_dlp.YoutubeDL(ydlOpts) as ydl:
+        info = ydl.extract_info(youtubeLink, download=True)
+
+    return ydl.prepare_filename(info)
+
+
+
+@csrf_exempt
+def getSongAudio(request):
+    """API endpoint to find and download a song based on name and artist."""
+    if request.method == "POST":
+        songName = request.POST.get("name")
+        artistName = request.POST.get("artist")
+
+        if not songName or not artistName:
+            return JsonResponse({"error": "Missing song name or artist name"}, status=400)
+
+        youtubeLink = searchSongLink(songName, artistName)
+
+        if not youtubeLink:
+            return JsonResponse({"error": "Song not found on YouTube"}, status=404)
+
+        audioPath = downloadSongAudio(youtubeLink)
+
+        return JsonResponse({"audio_path": audioPath})
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+
+
 @csrf_exempt
 def findInstruments(request):
 
-    if request.method == "POST":
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid method"}, status=405)
+    
+    data = json.loads(request.body)
+    songName = data.get("name")
+    artistName = data.get("artist")
 
-        try:
-            data = json.loads(request.body)
-            audioUrl = data.get("audio_url")
+    if not songName or not artistName:
+        return JsonResponse({"error": "Missing song name or artist name"}, status=400)
+    
+    youtubeLink = searchSongLink(songName, artistName)
 
-            if not audioUrl:
-                return JsonResponse({"error": "No audio file found"}, status=400)
-            
-            response = requests.get(audioUrl)
+    if not youtubeLink: 
+        return JsonResponse({"error": "Song not found on YouTube"}, status=404)
+    
+    songAudioPath = downloadSongAudio(youtubeLink)
 
-            if response.status_code != 200:
-                return JsonResponse({"error": "Failed to download audio"}, status=400)
-            
-            audioFile = BytesIO(response.content)
+    if not songAudioPath:
+        return JsonResponse({"error": "Failed to download song audio"}, status=500)
+    
+    foundInstruments = "foundInstruments"
 
-            y, sr = librosa.load(audioFile, sr=None)
+    try:
+        subprocess.run(["spleeter", "separate", "-p", "spleeter:5stems", "-o", foundInstruments, songAudioPath], check=True)
 
-            spectral = librosa.feature.spectral_centroid(y=y, sr=sr)[0]
-            rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr)[0]
-            
-            foundInstruments = []
-            if np.mean(spectral) > 5000:
-                foundInstruments.append("Electric Guitar")
-            if np.mean(rolloff) < 3000:
-                foundInstruments.append("Acoustic Guitar")
-            if np.mean(spectral) < 2000:
-                foundInstruments.append("Piano")
+    except subprocess.CalledProcessError:
+        return JsonResponse({"error": "Failed to separate instruments"}, status=500)
+    
+    return JsonResponse({"instruments": foundInstruments, "song":songName})
 
-            return JsonResponse({"instruments": foundInstruments})
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
 
+@csrf_exempt
+def getNotes(instrumentAudio):
+
+    if not os.path.exists(instrumentAudio):
+        return JsonResponse({"error": "File not found"}, status=404)
+
+    y,s = librosa.load(instrumentAudio, sr=None)
+    pitches, magnitudes = librosa.piptrack(y=y, sr=s)
+
+
+    pitchesValues = []
+
+    for t in range(pitches.shape[1]):
+        index = magnitudes[:, t].argmax()
+        pitch = pitches[index, t]
+        if pitch > 0:
+            pitchesValues.append(pitch)
+
+
+    midi = pretty_midi.PrettyMIDI()
+    instrument = pretty_midi.Instrument(program=0)
+
+    for pitch in pitchesValues:
+
+        note = pretty_midi.Note(velocity=100, pitch=int(librosa.hz_to_midi(pitch)), start=0, end=1)
+
+        # print("")
+        # print("")
+        # print("")
+        # print(note)
+        # print("")
+        # print("")   
+        # print("")
+
+        instrument.notes.append(note)
+
+
+    midi.instruments.append(instrument)
+    midiPath = "generated_notes/midi_output.mid"
+    midi.write(midiPath)
+
+    return midiPath
 
 
 @csrf_exempt

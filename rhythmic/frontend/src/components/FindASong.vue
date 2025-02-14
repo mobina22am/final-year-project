@@ -69,31 +69,8 @@ export default {
         this.apiToken = await this.getSpotifyToken();
     },
 
-
+    
     methods: {
-
-
-        async getSpotifyToken() {
-            const clientId = '14d9c89768f742eba1002eee652142c1';
-            const clientSecret = '3899528fce97481cb861f4c058fc44fe';
-            const refreshToken = 'AQDL_q4VFCEoM2Q5kiF2JKC_u3ASdZz7XGcQpiM7ATf9njO8ICahaDD3VPah9dQTD2quTcnJUQuPGamuihRCxt2h9H8ikL8Nh0HHwL3vK48HiqZa1m4wM8I1cs-4uikXwWk';
-
-            const response = await fetch('https://accounts.spotify.com/api/token', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: new URLSearchParams({
-                    grant_type: 'refresh_token',
-                    refresh_token: refreshToken,
-                    client_id: clientId,
-                    client_secret: clientSecret
-                })
-            });
-
-            const data = await response.json();
-            return data.access_token;
-        },
 
 
         async search(){
@@ -120,40 +97,39 @@ export default {
 
         },
 
-        // async getSpotifyToken() {
-        //     const clientId = '14d9c89768f742eba1002eee652142c1';
-        //     const clientSecret = '3899528fce97481cb861f4c058fc44fe';
-        //     const response = await fetch('https://accounts.spotify.com/api/token', {
-        //         method: 'POST',
-        //         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        //         body: new URLSearchParams({ grant_type: 'client_credentials', client_id: clientId, client_secret: clientSecret })
-        //     });
+        async getSpotifyToken() {
+            const clientId = '14d9c89768f742eba1002eee652142c1';
+            const clientSecret = '3899528fce97481cb861f4c058fc44fe';
+            const response = await fetch('https://accounts.spotify.com/api/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ grant_type: 'client_credentials', client_id: clientId, client_secret: clientSecret })
+            });
 
-        //     const data = await response.json();
-        //     return data.access_token;
-        // },
+            const data = await response.json();
+            return data.access_token;
+        },
 
 
         async songChosen(song){
             try {
 
-                if (!song.preview_url){
-                    alert("Sorry, this song does not have a preview available.");
-                    return;
-                }
-
-
+                alert("you are choosing song: " + song.name + " by: " + song.artist + "");
 
                 const response = await fetch("http://localhost:8000/findinstruments", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ audio_url: song.preview_url })
+                    body: JSON.stringify({name: song.name, artist: song.artist})
                 });
 
                 const data = await response.json();
-                song.instruments = data.instruments || [];
 
-                localStorage.setItem("song", JSON.stringify(song));
+                if (data.error) {
+                    console.error("Error in finding instruments:", data.error);
+                    return;
+                }
+
+                localStorage.setItem("instrument", data.instruments);
                 this.$router.push('/chooseinstrument');
             } 
             
@@ -161,6 +137,7 @@ export default {
                 console.error("Error in finding instruments:", error);
             }
         },
+
 
         back(){
             this.$router.push('/getnotes');
@@ -192,7 +169,6 @@ h1{
 form{
     display: grid;
     grid-template-columns: 1fr;
-    display: grid;
     grid-template-areas: 'searchInput' 'search';
     justify-content: center;
 }

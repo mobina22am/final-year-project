@@ -42,9 +42,11 @@
 </template>
 
 <script>
+import axios from 'axios';
 
 export default{
     name: 'ChooseInstrument',
+    
 
     data(){
         return{
@@ -53,9 +55,27 @@ export default{
         }
     },
 
-    mounted(){
-        this.song = JSON.parse(localStorage.getItem('song')) || {};
-        this.instruments = this.song.instruments || [];
+    async mounted(){
+
+        try{
+            const response = await axios.get('http://localhost:8000/findinstruments/', {withCredentials: true});
+
+            if (response.status === 200) {
+                this.song = response.data.song;
+                this.instruments = response.data.instruments;
+            }
+        }
+
+        catch(error){
+            if (error.response && error.response.data.error) {
+                alert(error.response.data.error);
+            } 
+            
+            else {
+                alert('Instruments retrieval failed. Please try again.');
+            }
+        }
+
     },
 
 

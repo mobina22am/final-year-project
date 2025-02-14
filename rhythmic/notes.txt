@@ -32,3 +32,69 @@ curl -X POST "https://accounts.spotify.com/api/token" \
     -d "refresh_token=AQDL_q4VFCEoM2Q5kiF2JKC_u3ASdZz7XGcQpiM7ATf9njO8ICahaDD3VPah9dQTD2quTcnJUQuPGamuihRCxt2h9H8ikL8Nh0HHwL3vK48HiqZa1m4wM8I1cs-4uikXwWk" \
     -d "client_id=14d9c89768f742eba1002eee652142c1" \
     -d "client_secret=3899528fce97481cb861f4c058fc44fe"
+
+
+
+
+
+
+
+
+
+
+
+this is the function to get the audio file from spotify (spotify doesn't provide the audio file):
+
+  // async getSpotifyToken() {
+        //     const clientId = '14d9c89768f742eba1002eee652142c1';
+        //     const clientSecret = '3899528fce97481cb861f4c058fc44fe';
+        //     const refreshToken = 'AQDL_q4VFCEoM2Q5kiF2JKC_u3ASdZz7XGcQpiM7ATf9njO8ICahaDD3VPah9dQTD2quTcnJUQuPGamuihRCxt2h9H8ikL8Nh0HHwL3vK48HiqZa1m4wM8I1cs-4uikXwWk';
+
+        //     const response = await fetch('https://accounts.spotify.com/api/token', {
+        //         method: 'POST',
+        //         headers: {
+        //             'Content-Type': 'application/x-www-form-urlencoded'
+        //         },
+        //         body: new URLSearchParams({
+        //             grant_type: 'refresh_token',
+        //             refresh_token: refreshToken,
+        //             client_id: clientId,
+        //             client_secret: clientSecret
+        //         })
+        //     });
+
+        //     const data = await response.json();
+        //     return data.access_token;
+        // },
+
+
+
+
+
+
+
+
+        if not audioUrl:
+                return JsonResponse({"error": "No audio file found"}, status=400)
+            
+            response = requests.get(audioUrl)
+
+            if response.status_code != 200:
+                return JsonResponse({"error": "Failed to download audio"}, status=400)
+            
+            audioFile = BytesIO(response.content)
+
+            y, sr = librosa.load(audioFile, sr=None)
+
+            spectral = librosa.feature.spectral_centroid(y=y, sr=sr)[0]
+            rolloff = librosa.feature.spectral_rolloff(y=y, sr=sr)[0]
+            
+            foundInstruments = []
+            if np.mean(spectral) > 5000:
+                foundInstruments.append("Electric Guitar")
+            if np.mean(rolloff) < 3000:
+                foundInstruments.append("Acoustic Guitar")
+            if np.mean(spectral) < 2000:
+                foundInstruments.append("Piano")
+
+            return JsonResponse({"instruments": foundInstruments})
