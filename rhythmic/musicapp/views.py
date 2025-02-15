@@ -14,10 +14,16 @@ from io import BytesIO
 import yt_dlp
 import subprocess
 import os
+from spleeter.separator import Separator
+import soundfile as sf
+import tempfile
+from pydub import AudioSegment
+
 
 
 ytUrl = "https://www.youtube.com/results?search_query="
 User = get_user_model()
+songData = {}
 
 @csrf_exempt
 def UserSignUp(request):
@@ -202,36 +208,72 @@ def getSongAudio(request):
 @csrf_exempt
 def findInstruments(request):
 
-    if request.method != "POST":
-        return JsonResponse({"error": "Invalid method"}, status=405)
-    
-    data = json.loads(request.body)
-    songName = data.get("name")
-    artistName = data.get("artist")
+    separator = Separator('spleeter:5stems')
+    global foundInstruments
+    global songData
 
-    if not songName or not artistName:
-        return JsonResponse({"error": "Missing song name or artist name"}, status=400)
-    
-    youtubeLink = searchSongLink(songName, artistName)
+    if request.method == "POST":
+        
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+            songName = data.get("name")
+            artistName = data.get("artist")
 
-    if not youtubeLink: 
-        return JsonResponse({"error": "Song not found on YouTube"}, status=404)
-    
-    songAudioPath = downloadSongAudio(youtubeLink)
+            if not songName or not artistName:
+                return JsonResponse({"error": "Missing song name or artist name"}, status=400)
+            
+            youtubeLink = searchSongLink(songName, artistName)
 
-    if not songAudioPath:
-        return JsonResponse({"error": "Failed to download song audio"}, status=500)
-    
-    foundInstruments = "foundInstruments"
+            if not youtubeLink: 
+                return JsonResponse({"error": "Song not found on YouTube"}, status=404)
+            
+            songAudioPath = downloadSongAudio(youtubeLink)
 
-    try:
-        subprocess.run(["spleeter", "separate", "-p", "spleeter:5stems", "-o", foundInstruments, songAudioPath], check=True)
+            if not songAudioPath:
+                return JsonResponse({"error": "Failed to download song audio"}, status=500)
+            
 
-    except subprocess.CalledProcessError:
-        return JsonResponse({"error": "Failed to separate instruments"}, status=500)
-    
-    return JsonResponse({"instruments": foundInstruments, "song":songName})
 
+            try:
+                separator.separate_to_file(songAudioPath, "separatedAudio")
+
+            except subprocess.CalledProcessError:
+                return JsonResponse({"error": "Failed to separate instruments"}, status=500)
+            
+
+            accompanimentPath = "separatedAudio/accompaniment.wav".format(os.path.basename(songAudioPath).split(".")[0])
+
+            y, sr = librosa.load(accompanimentPath, sr=None)
+            spectralCentroids = librosa.feature.spectral_centroid(y=y, sr=sr).mean()
+
+            foundInstruments = []
+
+            if spectralCentroids < 1000:
+                foundInstruments.append("Bass", "Drums")
+
+            elif spectralCentroids < 3000:
+                foundInstruments.append("Guitar", "Drums")
+
+            else:
+                foundInstruments.append("Piano", "Vocals")
+
+
+            songData = { "name": songName, "artist": artistName, "audio_path": songAudioPath, "instruments": foundInstruments }
+
+            return JsonResponse({"message": "instruments detected", "instruments": foundInstruments, "song": songData}, status=200)
+        
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+
+    if request.method == "GET":
+        if songData:
+            return JsonResponse({"instruments": foundInstruments, "song": songData}, status=200)
+        
+        else:
+            return JsonResponse({"error": "No song data detected"}, status=404)
+
+    return JsonResponse({"error": "Invalid request"}, status=405)
 
 @csrf_exempt
 def getNotes(instrumentAudio):
