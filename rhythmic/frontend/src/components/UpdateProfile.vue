@@ -87,7 +87,7 @@ export default{
 
         catch (error) {
             if (error.response && error.response.data.error) {
-                alert(error.response.data.error); // Show backend error message
+                alert(error.response.data.error); 
             } 
             
             else {
