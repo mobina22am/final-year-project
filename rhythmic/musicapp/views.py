@@ -183,12 +183,10 @@ def downloadSongAudio(youtubeLink):
 
 
 @csrf_exempt
-def getSongAudio(request):
+def getSongAudio(request, songName, artistName):
     """API endpoint to find and download a song based on name and artist."""
-    if request.method == "POST":
-        songName = request.POST.get("name")
-        artistName = request.POST.get("artist")
 
+    if request.method == "POST":
         if not songName or not artistName:
             return JsonResponse({"error": "Missing song name or artist name"}, status=400)
 
@@ -219,29 +217,27 @@ def findInstruments(request):
             songName = data.get("name")
             artistName = data.get("artist")
 
-            if not songName or not artistName:
-                return JsonResponse({"error": "Missing song name or artist name"}, status=400)
             
-            youtubeLink = searchSongLink(songName, artistName)
+            response = getSongAudio(request, songName, artistName)
+            songData = json.loads(response.content) 
 
-            if not youtubeLink: 
-                return JsonResponse({"error": "Song not found on YouTube"}, status=404)
-            
-            songAudioPath = downloadSongAudio(youtubeLink)
 
-            if not songAudioPath:
+            if "audio_path" not in songData:
                 return JsonResponse({"error": "Failed to download song audio"}, status=500)
             
-
+            songPathString = songData["audio_path"]
+            songPathString = songPathString.replace(".webm", ".mp3")
+            
 
             try:
-                separator.separate_to_file(songAudioPath, "separatedAudio")
+                separator.separate_to_file(songPathString, "separatedAudio")
+
 
             except subprocess.CalledProcessError:
                 return JsonResponse({"error": "Failed to separate instruments"}, status=500)
             
 
-            accompanimentPath = "separatedAudio/accompaniment.wav".format(os.path.basename(songAudioPath).split(".")[0])
+            accompanimentPath = f"separatedAudio/{os.path.basename(songPathString).split('.')[0]}/accompaniment.wav"
 
             y, sr = librosa.load(accompanimentPath, sr=None)
             spectralCentroids = librosa.feature.spectral_centroid(y=y, sr=sr).mean()
@@ -258,12 +254,13 @@ def findInstruments(request):
                 foundInstruments.append("Piano", "Vocals")
 
 
-            songData = { "name": songName, "artist": artistName, "audio_path": songAudioPath, "instruments": foundInstruments }
+            songData = { "name": songName, "artist": artistName, "audio_path": songPathString, "instruments": foundInstruments }
 
             return JsonResponse({"message": "instruments detected", "instruments": foundInstruments, "song": songData}, status=200)
         
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON"}, status=400)
+
 
 
     if request.method == "GET":
@@ -274,6 +271,8 @@ def findInstruments(request):
             return JsonResponse({"error": "No song data detected"}, status=404)
 
     return JsonResponse({"error": "Invalid request"}, status=405)
+
+
 
 @csrf_exempt
 def getNotes(instrumentAudio):
