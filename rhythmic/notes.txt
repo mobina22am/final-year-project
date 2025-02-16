@@ -98,3 +98,101 @@ this is the function to get the audio file from spotify (spotify doesn't provide
                 foundInstruments.append("Piano")
 
             return JsonResponse({"instruments": foundInstruments})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if request.method == "POST":
+        
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+            songName = data.get("name")
+            artistName = data.get("artist")
+
+            if not songName or not artistName:
+                return JsonResponse({"error": "Missing song name or artist name"}, status=400)
+            
+            youtubeLink = searchSongLink(songName, artistName)
+
+            if not youtubeLink: 
+                return JsonResponse({"error": "Song not found on YouTube"}, status=404)
+            
+            songAudioPath = downloadSongAudio(youtubeLink)
+
+            if not songAudioPath:
+                return JsonResponse({"error": "Failed to download song audio"}, status=500)
+            
+
+
+            try:
+                separator.separate_to_file(songAudioPath, "separatedAudio")
+
+            except subprocess.CalledProcessError:
+                return JsonResponse({"error": "Failed to separate instruments"}, status=500)
+            
+
+            accompanimentPath = "separatedAudio/accompaniment.wav".format(os.path.basename(songAudioPath).split(".")[0])
+
+            y, sr = librosa.load(accompanimentPath, sr=None)
+            spectralCentroids = librosa.feature.spectral_centroid(y=y, sr=sr).mean()
+
+            foundInstruments = []
+
+            if spectralCentroids < 1000:
+                foundInstruments.append("Bass", "Drums")
+
+            elif spectralCentroids < 3000:
+                foundInstruments.append("Guitar", "Drums")
+
+            else:
+                foundInstruments.append("Piano", "Vocals")
+
+
+            songData = { "name": songName, "artist": artistName, "audio_path": songAudioPath, "instruments": foundInstruments }
+
+            return JsonResponse({"message": "instruments detected", "instruments": foundInstruments, "song": songData}, status=200)
+        
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+
+    if request.method == "GET":
+        if songData:
+            return JsonResponse({"instruments": foundInstruments, "song": songData}, status=200)
+        
+        else:
+            return JsonResponse({"error": "No song data detected"}, status=404)
+
+    return JsonResponse({"error": "Invalid request"}, status=405)
