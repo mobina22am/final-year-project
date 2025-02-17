@@ -206,11 +206,13 @@ def getSongAudio(request, songName, artistName):
 @csrf_exempt
 def findInstruments(request):
 
+    import glob
     separator = Separator('spleeter:5stems')
     global foundInstruments
     global songData
 
     if request.method == "POST":
+        foundInstruments = []
         
         try:
             data = json.loads(request.body.decode("utf-8"))
@@ -232,26 +234,39 @@ def findInstruments(request):
             try:
                 separator.separate_to_file(songPathString, "separatedAudio")
 
-
             except subprocess.CalledProcessError:
                 return JsonResponse({"error": "Failed to separate instruments"}, status=500)
             
 
-            accompanimentPath = f"separatedAudio/{os.path.basename(songPathString).split('.')[0]}/accompaniment.wav"
+            separatedDirection = f"separatedAudio/{os.path.basename(songPathString).split('.')[0]}/*"
 
-            y, sr = librosa.load(accompanimentPath, sr=None)
-            spectralCentroids = librosa.feature.spectral_centroid(y=y, sr=sr).mean()
+            for file in glob.glob(separatedDirection):
 
-            foundInstruments = []
+                y, sr = librosa.load(file, sr=None)
 
-            if spectralCentroids < 1000:
-                foundInstruments.append("Bass", "Drums")
+                spectralCentroids = librosa.feature.spectral_centroid(y=y, sr=sr).mean()
+                zeroCrossingRate = librosa.feature.zero_crossing_rate(y).mean()
+                spectralBandwidth = librosa.feature.spectral_bandwidth(y=y, sr=sr).mean()
 
-            elif spectralCentroids < 3000:
-                foundInstruments.append("Guitar", "Drums")
 
-            else:
-                foundInstruments.append("Piano", "Vocals")
+                if "bass.wav" in file and spectralCentroids < 900 and zeroCrossingRate < 0.05:
+                    foundInstruments.append("Bass")
+
+                if "drums.wav" in file and spectralBandwidth > 2000 and zeroCrossingRate > 0.1:
+                    foundInstruments.append("Drums")
+
+                if "other.wav" in file and 900 < spectralCentroids < 3500 and 1000 < spectralBandwidth < 4500:
+                    foundInstruments.append("Guitar")
+
+
+                if "other.wav" in file or "other.wav" in file and 1500 < spectralCentroids < 4000 and 2000 < spectralBandwidth < 5000:
+                        foundInstruments.append("Violin")
+
+                if "piano.wav" in file and spectralCentroids > 3000 and spectralBandwidth > 4000:
+                    foundInstruments.append("Piano")
+
+
+            foundInstruments = list(set(foundInstruments))
 
 
             songData = { "name": songName, "artist": artistName, "audio_path": songPathString, "instruments": foundInstruments }
@@ -262,13 +277,11 @@ def findInstruments(request):
             return JsonResponse({"error": "Invalid JSON"}, status=400)
 
 
-
     if request.method == "GET":
         if songData:
             return JsonResponse({"instruments": foundInstruments, "song": songData}, status=200)
         
-        else:
-            return JsonResponse({"error": "No song data detected"}, status=404)
+        return JsonResponse({"error": "No song data detected"}, status=404)
 
     return JsonResponse({"error": "Invalid request"}, status=405)
 

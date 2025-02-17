@@ -31,13 +31,16 @@
                     <tr v-for="(instrument, index) in instruments" :key="index">
                         <td>
                             <button type="button" class="instruments">
-                                <p>{{ instrument }}</p>
+                                <p id="instrumentsButton">{{ instrument }}</p>
                             </button>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
+
+        <button type="button" id="back" @click="back">Back</button>
+
     </div>
 </template>
 
@@ -58,16 +61,20 @@ export default{
     async mounted(){
 
         try{
-            const response = await axios.get('http://localhost:8000/findinstruments/', {withCredentials: true});
+            const response = await axios.get('http://localhost:8000/findinstruments', {withCredentials: true});
 
             if (response.status === 200) {
                 this.song = response.data.song;
-                this.instruments = response.data.instruments;
+                this.instruments = response.data.instruments || [];
+            }
+
+            else {
+                alert('Instruments retrieval failed. Please try again.');
             }
         }
 
         catch(error){
-            if (error.response && error.response.data.error) {
+            if (error.response || error.response.data.error) {
                 alert(error.response.data.error);
             } 
             
@@ -113,22 +120,7 @@ h1{
 form{
     display: grid;
     grid-template-columns: 1fr;
-    display: grid;
     grid-template-areas: 'searchInput' 'search';
-    justify-content: center;
-}
-
-#back{
-    left: 20%;
-}
-
-#search{
-    right: 20%;
-}
-
-#searchInput{
-    grid-area: searchInput;
-    font-size: 20px;
 }
 
 #logout{
@@ -162,10 +154,9 @@ form{
 #tableDiv {
     width: 100%; 
     margin: auto; 
-    max-height: 370px;
+    max-height: 400px;
     overflow-y: auto;
     margin-top: 2%;
-    display: block;
     border-radius: 27px;
 }
 
@@ -178,7 +169,6 @@ form{
     border: none;
     text-decoration: none;
     cursor: pointer;
-    justify-content: center;
     width: 100%;
 }
 
@@ -186,37 +176,44 @@ form{
     width: 100%;
     background-color: #ffffff;
     border: none;
-    font-size: 18px;
+    font-size: 20px;
     cursor: pointer;
-    display: flex;
-    justify-content: space-between;
     border-radius: 20px;
-    text-align: center;
-    padding: 8px;
+    margin-top: 15px;
 }
-
 
 .instruments:hover {
     background-color: #e0e0e0;
 }
 
-td {
-    padding: 0;
-}
-
 thead{
     position: sticky;
-    top: 0;
     color: white;
 }
 
 th{
     background-color: black;
     border-radius: 20px;
-    padding: 15px;
+    padding: 20px;
     font-size: 18px;
     text-align: center;
 }
 
+
+#back{
+    background-color: #ffffff;
+    color: black;
+    border: none;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    border-radius: 18px;
+    font-size: 20px;
+    position: absolute;
+    bottom: 0;
+    right: 45%;
+    margin-bottom: 2%;
+}
 
 </style>

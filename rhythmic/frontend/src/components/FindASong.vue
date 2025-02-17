@@ -87,8 +87,7 @@ export default {
             const data = await response.json();
 
             if (data.tracks && data.tracks.items) {
-                this.songs = data.tracks.items.map(track => ({name: track.name, artist: track.artists.map(artist => artist.name).join(', '), preview_url: track.preview_url || null}));
-                console.log(this.songs);
+                this.songs = data.tracks.items.map(track => ({name: track.name, artist: track.artists.map(artist => artist.name).join(', ')}));
             } 
             
             else {
@@ -129,7 +128,6 @@ export default {
                     return;
                 }
 
-                localStorage.setItem("instrument", data.instruments);
                 this.$router.push('/chooseinstrument');
             } 
             
