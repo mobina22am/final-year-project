@@ -247,6 +247,7 @@ def findInstruments(request):
                 spectralCentroids = librosa.feature.spectral_centroid(y=y, sr=sr).mean()
                 zeroCrossingRate = librosa.feature.zero_crossing_rate(y).mean()
                 spectralBandwidth = librosa.feature.spectral_bandwidth(y=y, sr=sr).mean()
+                spectralRolloff = librosa.feature.spectral_rolloff(y=y, sr=sr, roll_percent=0.85).mean()
 
 
                 if "bass.wav" in file and spectralCentroids < 900 and zeroCrossingRate < 0.05:
@@ -255,15 +256,15 @@ def findInstruments(request):
                 if "drums.wav" in file and spectralBandwidth > 2000 and zeroCrossingRate > 0.1:
                     foundInstruments.append("Drums")
 
-                if "other.wav" in file and 900 < spectralCentroids < 3500 and 1000 < spectralBandwidth < 4500:
-                    foundInstruments.append("Guitar")
-
-
-                if "other.wav" in file or "other.wav" in file and 1500 < spectralCentroids < 4000 and 2000 < spectralBandwidth < 5000:
-                        foundInstruments.append("Violin")
-
                 if "piano.wav" in file and spectralCentroids > 3000 and spectralBandwidth > 4000:
                     foundInstruments.append("Piano")
+
+                if "other.wav" in file:
+                    if 900 < spectralCentroids < 2500 and 1000 < spectralBandwidth < 4500:
+                        foundInstruments.append("Guitar")
+
+                    if 3000 < spectralCentroids < 6000 and 4000 < spectralBandwidth < 7000 and spectralRolloff > 6000:
+                        foundInstruments.append("Violin")
 
 
             foundInstruments = list(set(foundInstruments))

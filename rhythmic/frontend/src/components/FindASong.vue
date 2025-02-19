@@ -113,7 +113,7 @@ export default {
         async songChosen(song){
             try {
 
-                alert("you are choosing song: " + song.name + " by: " + song.artist + "");
+                alert("you are choosing song: " + song.name + " by: " + song.artist + ".\n" + "Please wait for the system to find the instruments.\n" + "This may take a few seconds.");
 
                 const response = await fetch("http://localhost:8000/findinstruments", {
                     method: "POST",
