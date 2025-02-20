@@ -8,9 +8,7 @@ from .models import User
 import json
 import librosa
 import pretty_midi
-import numpy as np
 import requests
-from io import BytesIO
 import yt_dlp
 import subprocess
 import os
@@ -18,6 +16,9 @@ from spleeter.separator import Separator
 import soundfile as sf
 import tempfile
 from pydub import AudioSegment
+from io import BytesIO
+import numpy as np
+
 
 
 
