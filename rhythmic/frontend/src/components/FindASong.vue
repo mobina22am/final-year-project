@@ -18,6 +18,21 @@
 
         <h1>Find A Song</h1>
 
+        <div id="popUpWindow" v-if="popup">
+            <div id="insidePopUp">
+                <h2>Instrument Detection Started</h2>
+                <p>You have chosen song: {{ this.songName }} by: {{ this.artistName }}.</p>
+                <h3 class="inform">Please wait for the system to find the instruments</h3>
+                <h3 class="inform">THIS MIGHT TAKE A FEW MINUTES</h3>
+
+                <div id="loading">
+                    <div id="loadingCircle">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
         <form @submit.prevent="search">
             <input type="text" v-model="userInput" placeholder="Type In The Song Detail" id="searchInput" required>
             <button type="button" id="back" @click="back" class="findASongButtons">Back</button>
@@ -26,7 +41,6 @@
 
         <div id="tableDiv">
             <table v-if="songs.length > 0" id="songsTable">
-
                 <thead>
                     <tr>
                         <div id="headerDiv">
@@ -61,7 +75,10 @@ export default {
         return{
             userInput: '',
             songs: [],
-            apiToken: ''
+            apiToken: '',
+            popup: false,
+            songName: '',
+            artistName: ''
         }
     },
 
@@ -113,7 +130,10 @@ export default {
         async songChosen(song){
             try {
 
-                alert("you are choosing song: " + song.name + " by: " + song.artist + ".\n" + "Please wait for the system to find the instruments.\n" + "This may take a few seconds.");
+                this.popup = true;
+                this.songName = song.name;
+                this.artistName = song.artist;
+
 
                 const response = await fetch("http://localhost:8000/findinstruments", {
                     method: "POST",
@@ -302,6 +322,58 @@ thead{
     text-align: right;
 }
 
+#popUpWindow{
+    background-color: white;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    padding: 50px;
+    border: black 2px solid;   
+    height: 100%;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.5); 
+}
+
+#insidePopUp{
+    background-color: white;
+    padding: 50px;
+    border-radius: 20px;
+    text-align: center;
+    font-size: 20px;
+    color: black;
+}
+
+.inform{
+    margin-top: 20px;
+    font-size: 20px;
+    color: red;
+    text-align: center;
+}
+
+#loading{
+    text-align: center;
+    margin-top: 20px;
+}
+
+#loadingCircle {
+    border: 10px solid #f3f3f3;
+    border-top: 10px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 2s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 </style>
-
-

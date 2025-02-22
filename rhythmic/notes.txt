@@ -196,3 +196,38 @@ if request.method == "POST":
             return JsonResponse({"error": "No song data detected"}, status=404)
 
     return JsonResponse({"error": "Invalid request"}, status=405)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if "bass.wav" in file and spectralCentroids < 900 and zeroCrossingRate < 0.05:
+                    foundInstruments.append("Bass")
+
+                if "drums.wav" in file and spectralBandwidth > 2000 and zeroCrossingRate > 0.1:
+                    foundInstruments.append("Drums")
+
+                if "piano.wav" in file and spectralCentroids > 3000 and spectralBandwidth > 4000:
+                    foundInstruments.append("Piano")
+
+                if "other.wav" in file:
+                    if 900 < spectralCentroids < 2500 and 1000 < spectralBandwidth < 4500:
+                        foundInstruments.append("Guitar")
+
+                    if 3000 < spectralCentroids < 6000 and 4000 < spectralBandwidth < 7000 and spectralRolloff > 6000:
+                        foundInstruments.append("Violin")

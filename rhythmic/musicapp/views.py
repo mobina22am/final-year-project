@@ -1,7 +1,6 @@
-from django.http import HttpResponse
 # *************
 from django.contrib.auth import login, logout, authenticate
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
 from .models import User
@@ -12,12 +11,15 @@ import requests
 import yt_dlp
 import subprocess
 import os
-from spleeter.separator import Separator
-import soundfile as sf
-import tempfile
-from pydub import AudioSegment
-from io import BytesIO
-import numpy as np
+import glob
+import time
+import threading
+# from spleeter.separator import Separator
+# import soundfile as sf
+# import tempfile
+# from pydub import AudioSegment
+# from io import BytesIO
+# import numpy as np
 
 
 
@@ -207,8 +209,6 @@ def getSongAudio(request, songName, artistName):
 @csrf_exempt
 def findInstruments(request):
 
-    import glob
-    separator = Separator('spleeter:5stems')
     global foundInstruments
     global songData
 
@@ -220,10 +220,8 @@ def findInstruments(request):
             songName = data.get("name")
             artistName = data.get("artist")
 
-            
             response = getSongAudio(request, songName, artistName)
             songData = json.loads(response.content) 
-
 
             if "audio_path" not in songData:
                 return JsonResponse({"error": "Failed to download song audio"}, status=500)
@@ -231,15 +229,15 @@ def findInstruments(request):
             songPathString = songData["audio_path"]
             songPathString = songPathString.replace(".webm", ".mp3")
             
-
+            # 6-stem model
             try:
-                separator.separate_to_file(songPathString, "separatedAudio")
+                subprocess.run(["demucs", "-n", "htdemucs_ft", songPathString], check=True)
 
             except subprocess.CalledProcessError:
                 return JsonResponse({"error": "Failed to separate instruments"}, status=500)
             
 
-            separatedDirection = f"separatedAudio/{os.path.basename(songPathString).split('.')[0]}/*"
+            separatedDirection = f"separated/htdemucs_ft/{os.path.basename(songPathString).split('.')[0]}/*"
 
             for file in glob.glob(separatedDirection):
 
@@ -250,15 +248,17 @@ def findInstruments(request):
                 spectralBandwidth = librosa.feature.spectral_bandwidth(y=y, sr=sr).mean()
                 spectralRolloff = librosa.feature.spectral_rolloff(y=y, sr=sr, roll_percent=0.85).mean()
 
-
-                if "bass.wav" in file and spectralCentroids < 900 and zeroCrossingRate < 0.05:
+                if "bass.wav" in file:
                     foundInstruments.append("Bass")
 
-                if "drums.wav" in file and spectralBandwidth > 2000 and zeroCrossingRate > 0.1:
+                if "drums.wav" in file:
                     foundInstruments.append("Drums")
 
-                if "piano.wav" in file and spectralCentroids > 3000 and spectralBandwidth > 4000:
+                if "piano.wav" in file:
                     foundInstruments.append("Piano")
+
+                if "guitar.wav" in file:
+                    foundInstruments.append("Guitar")
 
                 if "other.wav" in file:
                     if 900 < spectralCentroids < 2500 and 1000 < spectralBandwidth < 4500:
@@ -267,9 +267,7 @@ def findInstruments(request):
                     if 3000 < spectralCentroids < 6000 and 4000 < spectralBandwidth < 7000 and spectralRolloff > 6000:
                         foundInstruments.append("Violin")
 
-
             foundInstruments = list(set(foundInstruments))
-
 
             songData = { "name": songName, "artist": artistName, "audio_path": songPathString, "instruments": foundInstruments }
 
@@ -286,7 +284,6 @@ def findInstruments(request):
         return JsonResponse({"error": "No song data detected"}, status=404)
 
     return JsonResponse({"error": "Invalid request"}, status=405)
-
 
 
 @csrf_exempt
