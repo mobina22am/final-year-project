@@ -8,6 +8,7 @@ import Profile from '@/components/UpdateProfile.vue';
 import GetNotes from '@/components/GetNotes.vue';
 import FindASong from '@/components/FindASong.vue';
 import ChooseInstrument from '@/components/ChooseInstrument.vue'; 
+import GeneratedNotes from '@/components/GeneratedNotes.vue';
 
 const routes = [
   { path: '/', name: 'StartPage', component: StartPage },
@@ -18,6 +19,7 @@ const routes = [
   { path: '/getnotes', name: 'GetNotes', component: GetNotes},
   { path: '/findasong', name: 'FindASong', component: FindASong},
   { path: '/chooseinstrument', name: 'ChooseInstrument', component: ChooseInstrument},
+  { path: '/generatednotes', name: 'GeneratedNotes', component: GeneratedNotes},
 ];
 
 const router = createRouter({

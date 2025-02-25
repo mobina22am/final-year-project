@@ -12,8 +12,7 @@ import yt_dlp
 import subprocess
 import os
 import glob
-import time
-import threading
+import base64
 # from spleeter.separator import Separator
 # import soundfile as sf
 # import tempfile
@@ -152,6 +151,7 @@ def updateProfile(request):
 
 
 def searchSongLink(songName, artistName):
+    # search tyhe song on youtube
 
     query = f"{songName} {artistName} official audio"
     songUrl = ytUrl + "+".join(query.split())
@@ -165,7 +165,9 @@ def searchSongLink(songName, artistName):
 
 
 def downloadSongAudio(youtubeLink):
-    """Downloads the YouTube audio and saves it as an MP3."""
+    # Downloads the YouTube audio
+
+
     outputPath = "songs/%(title)s.%(ext)s"
 
     ydlOpts = {
@@ -187,7 +189,7 @@ def downloadSongAudio(youtubeLink):
 
 @csrf_exempt
 def getSongAudio(request, songName, artistName):
-    """API endpoint to find and download a song based on name and artist."""
+    # find and download a song from YouTube
 
     if request.method == "POST":
         if not songName or not artistName:
@@ -229,7 +231,7 @@ def findInstruments(request):
             songPathString = songData["audio_path"]
             songPathString = songPathString.replace(".webm", ".mp3")
             
-            # 6-stem model
+            # 6-stem demucs model
             try:
                 subprocess.run(["demucs", "-n", "htdemucs_ft", songPathString], check=True)
 
@@ -244,7 +246,7 @@ def findInstruments(request):
                 y, sr = librosa.load(file, sr=None)
 
                 spectralCentroids = librosa.feature.spectral_centroid(y=y, sr=sr).mean()
-                zeroCrossingRate = librosa.feature.zero_crossing_rate(y).mean()
+                # zeroCrossingRate = librosa.feature.zero_crossing_rate(y).mean()
                 spectralBandwidth = librosa.feature.spectral_bandwidth(y=y, sr=sr).mean()
                 spectralRolloff = librosa.feature.spectral_rolloff(y=y, sr=sr, roll_percent=0.85).mean()
 
@@ -287,47 +289,83 @@ def findInstruments(request):
 
 
 @csrf_exempt
-def getNotes(instrumentAudio):
+def generatedNotes(request):
 
-    if not os.path.exists(instrumentAudio):
-        return JsonResponse({"error": "File not found"}, status=404)
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+            instrumentName = data.get("instrument")
+            songName = data.get("name")
+            artistName = data.get("artist")
 
-    y,s = librosa.load(instrumentAudio, sr=None)
-    pitches, magnitudes = librosa.piptrack(y=y, sr=s)
+            if not instrumentName or not songName:
+                return JsonResponse({"error": "Missing instrument or song name"}, status=400)   
 
+            instrumentAudioFile = f"separated/htdemucs_ft/{artistName}/{songName}/{instrumentName.lower()}.wav"
 
-    pitchesValues = []
+            if not os.path.exists(instrumentAudioFile):
+                return JsonResponse({"error": "Instrument audio file not found"}, status=404)
 
-    for t in range(pitches.shape[1]):
-        index = magnitudes[:, t].argmax()
-        pitch = pitches[index, t]
-        if pitch > 0:
-            pitchesValues.append(pitch)
+            y, sr = librosa.load(instrumentAudioFile, sr=None)
+            pitches, magnitudes = librosa.piptrack(y=y, sr=sr)
 
+            pitchesValues = [pitches[magnitudes[:, i].argmax(), i] for i in range(pitches.shape[1]) if pitches[magnitudes[:, i].argmax(), i] > 0]
 
-    midi = pretty_midi.PrettyMIDI()
-    instrument = pretty_midi.Instrument(program=0)
+            midi = pretty_midi.PrettyMIDI()
+            instrument = pretty_midi.Instrument(program=0)
 
-    for pitch in pitchesValues:
+            notesData = []
 
-        note = pretty_midi.Note(velocity=100, pitch=int(librosa.hz_to_midi(pitch)), start=0, end=1)
-
-        # print("")
-        # print("")
-        # print("")
-        # print(note)
-        # print("")
-        # print("")   
-        # print("")
-
-        instrument.notes.append(note)
+            for pitch in pitchesValues:
+                midiNote = int(librosa.hz_to_midi(pitch))
+                note = pretty_midi.Note(velocity=100, pitch=midiNote, start=0, end=1)
+                instrument.notes.append(note)
+                notesData.append({"pitch": midiNote, "note": pretty_midi.note_number_to_name(midiNote)})
 
 
-    midi.instruments.append(instrument)
-    midiPath = "generated_notes/midi_output.mid"
-    midi.write(midiPath)
+            midi.instruments.append(instrument)
+            midiPath = f"generatedNotes/{songName}_{artistName}_{instrumentName}.mid"
+            os.makedirs("generatedNotes", exist_ok=True)
+            midi.write(midiPath)
 
-    return midiPath
+            return JsonResponse({"message": "Notes generated", "midi_path": midiPath}, status=200)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+        
+
+    if request.method == "GET":
+        try:
+            songName = request.GET.get("song")
+            instrument = request.GET.get("instrument")
+            artistName = request.GET.get("artist")
+
+            if not songName or not instrument:
+                return JsonResponse({"error": "Missing song or instrument name"}, status=400)
+
+            midiPath = f"generatedNotes/{songName}_{artistName}_{instrumentName}.mid"
+
+            if not os.path.exists(midiPath):
+                return JsonResponse({"error": "MIDI file not found"}, status=404)
+        
+
+            midiData = pretty_midi.PrettyMIDI(midiPath)
+            generatedNotes = []
+
+            for instrument in midiData.instruments:
+                for note in instrument.notes:
+                    generatedNotes.append({"pitch": note.pitch, "note": pretty_midi.note_number_to_name(note.pitch), "start_time": note.start, "end_time": note.end})
+            
+            return JsonResponse({"message": "Notes retrieved", "notes": generatedNotes}, status=200)
+        
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request"}, status=405)
+
 
 
 @csrf_exempt

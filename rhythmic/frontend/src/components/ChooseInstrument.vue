@@ -30,7 +30,7 @@
                 <tbody> 
                     <tr v-for="(instrument, index) in instruments" :key="index">
                         <td>
-                            <button type="button" class="instruments">
+                            <button type="button" class="instruments" @click="instrumentChosen(instrument)">
                                 <p id="instrumentsButton">{{ instrument }}</p>
                             </button>
                         </td>
@@ -54,6 +54,7 @@ export default{
     data(){
         return{
             song: '',
+            artist: '',
             instruments: []
         }
     },
@@ -65,6 +66,7 @@ export default{
 
             if (response.status === 200) {
                 this.song = response.data.song;
+                this.artist = response.data.artist;
                 this.instruments = response.data.instruments || [];
             }
 
@@ -87,6 +89,36 @@ export default{
 
 
     methods: {
+
+        async instrumentChosen(instrument){
+
+            try{
+                
+                const response = await axios.post('http://localhost:8000/generatenotes', {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({instrument: instrument, song: this.song.name, artist: this.song.artist}),                
+                    });
+                
+                    const data = await response.json();
+
+                    if (data.error) {
+                        console.error("Error in generating notes:", data.error);
+                        return;
+                    }
+                
+                localStorage.setItem('songName', this.song.name);
+                localStorage.setItem('artistName', this.song.artist);
+                localStorage.setItem('instrument', instrument);
+
+                this.$router.push('/generatednotes');
+            }
+
+            catch(error){
+                console.error("Error in generating notes:", error);
+            }
+        },
+
 
         back(){
             this.$router.push('/getnotes');

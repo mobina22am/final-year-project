@@ -9,4 +9,5 @@ urlpatterns = [
     path('logout/', views.logout, name='logOut'),
     path('profile/', views.updateProfile, name='profile'),
     path('findinstruments', views.findInstruments, name='findInstruments'),
+    path('generatednotes', views.generatedNotes, name='generatedNotes'),
 ]
