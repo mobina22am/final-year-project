@@ -51,6 +51,7 @@ export default {
         getNotes(){
             this.$router.push('/getnotes');
         },
+
         accessFolders(){
             this.$router.push('/folders');
         },
@@ -67,9 +68,6 @@ export default {
 }
 
 </script>
-
-
-
 
 
 

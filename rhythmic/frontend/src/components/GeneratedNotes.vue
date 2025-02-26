@@ -85,7 +85,7 @@ export default{
             }
 
             else {
-                alert('Instruments retrieval failed. Please try again.');
+                alert('generating notes failed');
             }
         }
 
@@ -95,7 +95,7 @@ export default{
             } 
             
             else {
-                alert('Instruments retrieval failed. Please try again.');
+                alert('generating notes failed.');
             }
         }
 

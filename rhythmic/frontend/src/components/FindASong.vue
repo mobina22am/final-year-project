@@ -21,7 +21,7 @@
         <div id="popUpWindow" v-if="popup">
             <div id="insidePopUp">
                 <h2>Instrument Detection Started</h2>
-                <p>You have chosen song: {{ this.songName }} by: {{ this.artistName }}.</p>
+                <p>You have chosen the song: {{ this.songName }} by: {{ this.artistName }}.</p>
                 <h3 class="inform">Please wait for the system to find the instruments</h3>
                 <h3 class="inform">THIS MIGHT TAKE A FEW MINUTES</h3>
 

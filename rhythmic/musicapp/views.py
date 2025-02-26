@@ -243,31 +243,41 @@ def findInstruments(request):
 
             for file in glob.glob(separatedDirection):
 
-                y, sr = librosa.load(file, sr=None)
-
-                spectralCentroids = librosa.feature.spectral_centroid(y=y, sr=sr).mean()
-                # zeroCrossingRate = librosa.feature.zero_crossing_rate(y).mean()
-                spectralBandwidth = librosa.feature.spectral_bandwidth(y=y, sr=sr).mean()
-                spectralRolloff = librosa.feature.spectral_rolloff(y=y, sr=sr, roll_percent=0.85).mean()
+                if "vocals.wav" in file:
+                    continue
 
                 if "bass.wav" in file:
                     foundInstruments.append("Bass")
+                    continue
 
                 if "drums.wav" in file:
                     foundInstruments.append("Drums")
+                    continue
 
                 if "piano.wav" in file:
                     foundInstruments.append("Piano")
+                    continue
 
                 if "guitar.wav" in file:
                     foundInstruments.append("Guitar")
+                    continue
 
                 if "other.wav" in file:
+
+                    y, sr = librosa.load(file, sr=None)
+
+                    spectralCentroids = librosa.feature.spectral_centroid(y=y, sr=sr).mean()
+                    # zeroCrossingRate = librosa.feature.zero_crossing_rate(y).mean()
+                    spectralBandwidth = librosa.feature.spectral_bandwidth(y=y, sr=sr).mean()
+                    spectralRolloff = librosa.feature.spectral_rolloff(y=y, sr=sr, roll_percent=0.85).mean()
+
                     if 900 < spectralCentroids < 2500 and 1000 < spectralBandwidth < 4500:
                         foundInstruments.append("Guitar")
+                        continue
 
                     if 3000 < spectralCentroids < 6000 and 4000 < spectralBandwidth < 7000 and spectralRolloff > 6000:
                         foundInstruments.append("Violin")
+                        
 
             foundInstruments = list(set(foundInstruments))
 

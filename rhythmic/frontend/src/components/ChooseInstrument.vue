@@ -94,7 +94,7 @@ export default{
 
             try{
                 
-                const response = await axios.post('http://localhost:8000/generatenotes', {
+                const response = await axios.post('http://localhost:8000/generatednotes', {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({instrument: instrument, song: this.song.name, artist: this.song.artist}),                
