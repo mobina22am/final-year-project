@@ -16,28 +16,12 @@
             </button>
         </div>
 
-        <h1>Generated Notes For {{ songName }} By {{ artistName }} For {{ instrument }}</h1>
+
+        <h1>Generated Notes For "{{ songName }}" By "{{ artistName }}" For "{{ instrument }}"</h1>
         
         <div v-if="notes.length > 0">
-            <div id="generatedNotes">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Pitch</th>
-                            <th>Note</th>
-                            <th>Start Time (s)</th>
-                            <th>End Time (s)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="(note, index) in notes" :key="index">
-                            <td>{{ note.pitch }}</td>
-                            <td>{{ note.note }}</td>
-                            <td>{{ note.start_time.toFixed(2) }}</td>
-                            <td>{{ note.end_time.toFixed(2) }}</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div v-if="musicSheet">
+                <img :src="musicSheet" alt="Generated Music Sheet" style="max-width: 100%; height: auto;"/>
             </div>
         </div>
 
@@ -59,7 +43,8 @@ export default{
             notes: [],
             songName: '',
             artistName: '', 
-            instrument: ''
+            instrument: '', 
+            musicSheet: ''
         }
     },
 
@@ -78,10 +63,11 @@ export default{
             this.instrument = storedInstrument;
 
 
-            const response = await axios.get('http://localhost:8000/generatednotes', {params: {song: this.songName, instrument: this.instrument, artist: this.artistName}, withCredentials: true});
+            const response = await axios.get('http://localhost:8000/generatednotes', {params: {song: this.songName, artist: this.artistName, instrument: this.instrument}, withCredentials: true});
 
             if (response.status === 200) {
                 this.notes = response.data.notes;
+                this.musicSheet = response.data.musicSheet;
             }
 
             else {

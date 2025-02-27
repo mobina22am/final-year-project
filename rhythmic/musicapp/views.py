@@ -4,6 +4,8 @@ from django.http import JsonResponse, HttpResponse
 from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
 from .models import User
+import matplotlib.pyplot as plt
+from music21 import stream, note, meter
 import json
 import librosa
 import pretty_midi
@@ -12,6 +14,10 @@ import yt_dlp
 import subprocess
 import os
 import glob
+import shutil
+import matplotlib
+matplotlib.use('Agg')
+import re
 import base64
 # from spleeter.separator import Separator
 # import soundfile as sf
@@ -239,6 +245,10 @@ def findInstruments(request):
                 return JsonResponse({"error": "Failed to separate instruments"}, status=500)
             
 
+            separatedInstrumentFolder = f"separatedInstruments/{artistName} - {songName}"
+            
+            os.makedirs(separatedInstrumentFolder, exist_ok=True)
+
             separatedDirection = f"separated/htdemucs_ft/{os.path.basename(songPathString).split('.')[0]}/*"
 
             for file in glob.glob(separatedDirection):
@@ -248,18 +258,26 @@ def findInstruments(request):
 
                 if "bass.wav" in file:
                     foundInstruments.append("Bass")
+                    targetPath = os.path.join(separatedInstrumentFolder, "bass.wav")
+                    shutil.move(file, targetPath)
                     continue
 
                 if "drums.wav" in file:
                     foundInstruments.append("Drums")
+                    targetPath = os.path.join(separatedInstrumentFolder, "drums.wav")
+                    shutil.move(file, targetPath)
                     continue
 
                 if "piano.wav" in file:
                     foundInstruments.append("Piano")
+                    targetPath = os.path.join(separatedInstrumentFolder, "piano.wav")
+                    shutil.move(file, targetPath)
                     continue
 
                 if "guitar.wav" in file:
                     foundInstruments.append("Guitar")
+                    targetPath = os.path.join(separatedInstrumentFolder, "guitar.wav")
+                    shutil.move(file, targetPath)
                     continue
 
                 if "other.wav" in file:
@@ -273,10 +291,14 @@ def findInstruments(request):
 
                     if 900 < spectralCentroids < 2500 and 1000 < spectralBandwidth < 4500:
                         foundInstruments.append("Guitar")
+                        targetPath = os.path.join(separatedInstrumentFolder, "guitar.wav")
+                        shutil.move(file, targetPath)
                         continue
 
                     if 3000 < spectralCentroids < 6000 and 4000 < spectralBandwidth < 7000 and spectralRolloff > 6000:
                         foundInstruments.append("Violin")
+                        targetPath = os.path.join(separatedInstrumentFolder, "violin.wav")
+                        shutil.move(file, targetPath)
                         
 
             foundInstruments = list(set(foundInstruments))
@@ -298,6 +320,38 @@ def findInstruments(request):
     return JsonResponse({"error": "Invalid request"}, status=405)
 
 
+
+def generateMusicSheet(notesData,artistName, songName, instrumentName):
+    # Create a music21 stream for visualization
+    score = stream.Score()
+    part = stream.Part()
+    
+    # Add time signature (4/4 time)
+    part.append(meter.TimeSignature('4/4'))
+    
+    for noteData in notesData:
+        midiNote = noteData['pitch']
+        m21Note = note.Note(midiNote, quarterLength=1.0)  # Set the quarter length to 1 (can be adjusted)
+        part.append(m21Note)
+
+    score.append(part)
+
+    musicSheetPath = f"generatedMusicSheets/{artistName}_{songName}_{instrumentName}_sheet.png"
+    os.makedirs("generatedMusicSheets", exist_ok=True)
+
+    # Plot the music sheet
+    fig = plt.figure(figsize=(10, 2))
+    ax = fig.add_subplot(111)
+    ax.axis('off')
+    score.show('lily', file=fig)
+
+    # Save the image of the sheet music
+    
+    plt.savefig(musicSheetPath, format="png")
+    plt.close(fig)
+
+    return musicSheetPath
+
 @csrf_exempt
 def generatedNotes(request):
 
@@ -305,13 +359,13 @@ def generatedNotes(request):
         try:
             data = json.loads(request.body.decode("utf-8"))
             instrumentName = data.get("instrument")
-            songName = data.get("name")
+            songName = data.get("song")
             artistName = data.get("artist")
 
             if not instrumentName or not songName:
                 return JsonResponse({"error": "Missing instrument or song name"}, status=400)   
 
-            instrumentAudioFile = f"separated/htdemucs_ft/{artistName}/{songName}/{instrumentName.lower()}.wav"
+            instrumentAudioFile = f"separatedInstruments/{artistName} - {songName}/{instrumentName.lower()}.wav"
 
             if not os.path.exists(instrumentAudioFile):
                 return JsonResponse({"error": "Instrument audio file not found"}, status=404)
@@ -326,6 +380,9 @@ def generatedNotes(request):
 
             notesData = []
 
+            if not pitchesValues:
+                return JsonResponse({"error": "No pitch values detected, check audio quality"}, status=500)
+
             for pitch in pitchesValues:
                 midiNote = int(librosa.hz_to_midi(pitch))
                 note = pretty_midi.Note(velocity=100, pitch=midiNote, start=0, end=1)
@@ -334,11 +391,13 @@ def generatedNotes(request):
 
 
             midi.instruments.append(instrument)
-            midiPath = f"generatedNotes/{songName}_{artistName}_{instrumentName}.mid"
+            midiPath = f"generatedNotes/{songName}_{instrumentName}.mid"
             os.makedirs("generatedNotes", exist_ok=True)
             midi.write(midiPath)
 
-            return JsonResponse({"message": "Notes generated", "midi_path": midiPath}, status=200)
+            musicSheetPath = generateMusicSheet(notesData, artistName, songName, instrumentName)
+
+            return JsonResponse({"message": "Notes generated", "midi_path": midiPath, "sheet_path": musicSheetPath}, status=200)
 
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON"}, status=400)
@@ -356,7 +415,7 @@ def generatedNotes(request):
             if not songName or not instrument:
                 return JsonResponse({"error": "Missing song or instrument name"}, status=400)
 
-            midiPath = f"generatedNotes/{songName}_{artistName}_{instrumentName}.mid"
+            midiPath = f"generatedNotes/{songName}_{instrument}.mid"
 
             if not os.path.exists(midiPath):
                 return JsonResponse({"error": "MIDI file not found"}, status=404)
@@ -368,8 +427,10 @@ def generatedNotes(request):
             for instrument in midiData.instruments:
                 for note in instrument.notes:
                     generatedNotes.append({"pitch": note.pitch, "note": pretty_midi.note_number_to_name(note.pitch), "start_time": note.start, "end_time": note.end})
+
+            musicSheetPath = f"generatedMusicSheets/{artistName}_{songName}_{instrument}_sheet.png"
             
-            return JsonResponse({"message": "Notes retrieved", "notes": generatedNotes}, status=200)
+            return JsonResponse({"message": "Notes retrieved", "notes": generatedNotes, "musicSheet": musicSheetPath}, status=200)
         
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)

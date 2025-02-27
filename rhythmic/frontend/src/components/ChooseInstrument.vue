@@ -93,19 +93,21 @@ export default{
         async instrumentChosen(instrument){
 
             try{
-                
-                const response = await axios.post('http://localhost:8000/generatednotes', {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({instrument: instrument, song: this.song.name, artist: this.song.artist}),                
-                    });
-                
-                    const data = await response.json();
 
-                    if (data.error) {
-                        console.error("Error in generating notes:", data.error);
-                        return;
-                    }
+                console.log("Request Payload:", {instrument: instrument, song: this.song.name, artist: this.song.artist});
+                
+                const response = await fetch("http://localhost:8000/generatednotes", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({instrument: instrument, song: this.song.name, artist: this.song.artist})
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    console.error("Error in generating notes:", data.error);
+                    return;
+                }
                 
                 localStorage.setItem('songName', this.song.name);
                 localStorage.setItem('artistName', this.song.artist);

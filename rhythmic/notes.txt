@@ -231,3 +231,54 @@ if "bass.wav" in file and spectralCentroids < 900 and zeroCrossingRate < 0.05:
 
                     if 3000 < spectralCentroids < 6000 and 4000 < spectralBandwidth < 7000 and spectralRolloff > 6000:
                         foundInstruments.append("Violin")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table>
+                    <thead>
+                        <tr>
+                            <th>Pitch</th>
+                            <th>Note</th>
+                            <th>Start Time (s)</th>
+                            <th>End Time (s)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(note, index) in notes" :key="index">
+                            <td>{{ note.pitch }}</td>
+                            <td>{{ note.note }}</td>
+                            <td>{{ note.start_time.toFixed(2) }}</td>
+                            <td>{{ note.end_time.toFixed(2) }}</td>
+                        </tr>
+                    </tbody>
+                </table>
