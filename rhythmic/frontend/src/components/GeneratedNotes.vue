@@ -63,6 +63,7 @@ export default{
             this.instrument = storedInstrument;
 
 
+            
             const response = await axios.get('http://localhost:8000/generatednotes', {params: {song: this.songName, artist: this.artistName, instrument: this.instrument}, withCredentials: true});
 
             if (response.status === 200) {

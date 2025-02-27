@@ -329,6 +329,7 @@ def generateMusicSheet(notesData,artistName, songName, instrumentName):
     # Add time signature (4/4 time)
     part.append(meter.TimeSignature('4/4'))
     
+    
     for noteData in notesData:
         midiNote = noteData['pitch']
         m21Note = note.Note(midiNote, quarterLength=1.0)  # Set the quarter length to 1 (can be adjusted)

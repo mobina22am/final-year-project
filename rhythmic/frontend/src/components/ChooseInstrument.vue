@@ -90,6 +90,7 @@ export default{
 
     methods: {
 
+        
         async instrumentChosen(instrument){
 
             try{
