@@ -157,7 +157,6 @@ def updateProfile(request):
 
 
 def searchSongLink(songName, artistName):
-    # search tyhe song on youtube
 
     query = f"{songName} {artistName} official audio"
     songUrl = ytUrl + "+".join(query.split())
@@ -171,8 +170,6 @@ def searchSongLink(songName, artistName):
 
 
 def downloadSongAudio(youtubeLink):
-    # Downloads the YouTube audio
-
 
     outputPath = "songs/%(title)s.%(ext)s"
 
@@ -195,7 +192,6 @@ def downloadSongAudio(youtubeLink):
 
 @csrf_exempt
 def getSongAudio(request, songName, artistName):
-    # find and download a song from YouTube
 
     if request.method == "POST":
         if not songName or not artistName:
@@ -245,6 +241,13 @@ def findInstruments(request):
                 return JsonResponse({"error": "Failed to separate instruments"}, status=500)
             
 
+
+
+
+
+
+
+
             separatedInstrumentFolder = f"separatedInstruments/{artistName} - {songName}"
             
             os.makedirs(separatedInstrumentFolder, exist_ok=True)
@@ -280,6 +283,11 @@ def findInstruments(request):
                     shutil.move(file, targetPath)
                     continue
 
+
+
+
+
+
                 if "other.wav" in file:
 
                     y, sr = librosa.load(file, sr=None)
@@ -300,6 +308,8 @@ def findInstruments(request):
                         targetPath = os.path.join(separatedInstrumentFolder, "violin.wav")
                         shutil.move(file, targetPath)
                         
+
+
 
             foundInstruments = list(set(foundInstruments))
 
