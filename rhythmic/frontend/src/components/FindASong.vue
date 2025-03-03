@@ -134,6 +134,8 @@ export default {
                 this.songName = song.name;
                 this.artistName = song.artist;
 
+                
+                // add a confirm here before downloading the song
 
                 const response = await fetch("http://localhost:8000/findinstruments", {
                     method: "POST",

@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import User
 import matplotlib.pyplot as plt
 from music21 import stream, note, meter
+from music21 import environment
 import json
 import librosa
 import pretty_midi
@@ -25,7 +26,6 @@ import base64
 # from pydub import AudioSegment
 # from io import BytesIO
 # import numpy as np
-
 
 
 
@@ -241,13 +241,6 @@ def findInstruments(request):
                 return JsonResponse({"error": "Failed to separate instruments"}, status=500)
             
 
-
-
-
-
-
-
-
             separatedInstrumentFolder = f"separatedInstruments/{artistName} - {songName}"
             
             os.makedirs(separatedInstrumentFolder, exist_ok=True)
@@ -284,10 +277,6 @@ def findInstruments(request):
                     continue
 
 
-
-
-
-
                 if "other.wav" in file:
 
                     y, sr = librosa.load(file, sr=None)
@@ -308,9 +297,6 @@ def findInstruments(request):
                         targetPath = os.path.join(separatedInstrumentFolder, "violin.wav")
                         shutil.move(file, targetPath)
                         
-
-
-
             foundInstruments = list(set(foundInstruments))
 
             songData = { "name": songName, "artist": artistName, "audio_path": songPathString, "instruments": foundInstruments }
