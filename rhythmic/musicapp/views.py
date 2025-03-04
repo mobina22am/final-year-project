@@ -5,8 +5,7 @@ from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
 from .models import User
 import matplotlib.pyplot as plt
-from music21 import stream, note, meter
-from music21 import environment
+from music21 import stream, note, meter, converter
 import json
 import librosa
 import pretty_midi
@@ -204,6 +203,7 @@ def getSongAudio(request, songName, artistName):
 
         audioPath = downloadSongAudio(youtubeLink)
 
+
         return JsonResponse({"audio_path": audioPath})
 
     return JsonResponse({"error": "Invalid request"}, status=400)
@@ -325,7 +325,6 @@ def generateMusicSheet(notesData,artistName, songName, instrumentName):
     # Add time signature (4/4 time)
     part.append(meter.TimeSignature('4/4'))
     
-    
     for noteData in notesData:
         midiNote = noteData['pitch']
         m21Note = note.Note(midiNote, quarterLength=1.0)  # Set the quarter length to 1 (can be adjusted)
@@ -333,21 +332,22 @@ def generateMusicSheet(notesData,artistName, songName, instrumentName):
 
     score.append(part)
 
-    musicSheetPath = f"generatedMusicSheets/{artistName}_{songName}_{instrumentName}_sheet.png"
-    os.makedirs("generatedMusicSheets", exist_ok=True)
+    outputDir = os.path.abspath("generatedMusicSheets")
+    os.makedirs(outputDir, exist_ok=True)
 
-    # Plot the music sheet
-    fig = plt.figure(figsize=(10, 2))
-    ax = fig.add_subplot(111)
-    ax.axis('off')
-    score.show('lily', file=fig)
+    fileName = f"{artistName}_{songName}_{instrumentName}.pdf"
+    musicSheetPath = os.path.join(outputDir, fileName)
 
-    # Save the image of the sheet music
-    
-    plt.savefig(musicSheetPath, format="png")
-    plt.close(fig)
+    try:
+        score.write(fmt='pdf', fp=musicSheetPath)
+
+    except Exception as e:
+        print(f"Error generating PDF: {str(e)}")
+        return f"Error generating sheet: {str(e)}"
 
     return musicSheetPath
+
+
 
 @csrf_exempt
 def generatedNotes(request):
@@ -355,7 +355,7 @@ def generatedNotes(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body.decode("utf-8"))
-            instrumentName = data.get("instrument")
+            instrumentName = str(data.get("instrument"))
             songName = data.get("song")
             artistName = data.get("artist")
 
@@ -388,7 +388,7 @@ def generatedNotes(request):
 
 
             midi.instruments.append(instrument)
-            midiPath = f"generatedNotes/{songName}_{instrumentName}.mid"
+            midiPath = f"generatedNotes/{artistName}_{songName}_{instrumentName}.mid"
             os.makedirs("generatedNotes", exist_ok=True)
             midi.write(midiPath)
 
