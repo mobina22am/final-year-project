@@ -6,20 +6,6 @@
 
 export default {
   name: 'App',
-  components: {
-  },
-
-  mounted() {
-    const token = localStorage.getItem('token');
-
-    if (token) {
-      this.$router.push('/mainpage');
-    } 
-    
-    else {
-      this.$router.push('/');
-    }
-  }
 }
 </script>
 
