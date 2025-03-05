@@ -19,6 +19,7 @@ import matplotlib
 matplotlib.use('Agg')
 import re
 import base64
+from music21 import environment
 # from spleeter.separator import Separator
 # import soundfile as sf
 # import tempfile
@@ -26,6 +27,20 @@ import base64
 # from io import BytesIO
 # import numpy as np
 
+tempM21Dir = '/Users/mobinaaghaeimaleki/Documents/GitHub/final-year-project/rhythmic/analysedInstruments/music21_temp'
+
+if not os.path.exists(tempM21Dir):
+    os.makedirs(tempM21Dir)
+
+os.environ['M21_TEMP'] = tempM21Dir
+
+us = environment.UserSettings()
+
+# Set the LilyPond path for music21 if you're using it
+us['lilypondPath'] = '/opt/homebrew/bin/lilypond'
+
+print(f"LilyPond Path: {us['lilypondPath']}")
+print(f"Temporary directory for music21: {os.environ['M21_TEMP']}")
 
 
 ytUrl = "https://www.youtube.com/results?search_query="
@@ -224,6 +239,34 @@ def findInstruments(request):
             songName = data.get("name")
             artistName = data.get("artist")
 
+            separatedInstrumentFolder = f"separatedInstruments/{artistName} - {songName}"
+
+            if os.path.exists(separatedInstrumentFolder):
+                for file in glob.glob(os.path.join(separatedInstrumentFolder, '*')):
+
+                    if "bass.wav" in file:
+                        foundInstruments.append("Bass")
+                        continue
+
+                    if "drums.wav" in file:
+                        foundInstruments.append("Drums")
+                        continue
+
+                    if "piano.wav" in file:
+                        foundInstruments.append("Piano")
+                        continue
+
+                    if "guitar.wav" in file:
+                        foundInstruments.append("Guitar")
+                        continue
+                
+                foundInstruments = list(set(foundInstruments))
+
+                if foundInstruments:
+                    songData = {"name": songName, "artist": artistName, "instruments": foundInstruments}
+                    return JsonResponse({"message": "instruments detected", "instruments": foundInstruments, "song": songData}, status=200)
+
+
             response = getSongAudio(request, songName, artistName)
             songData = json.loads(response.content) 
 
@@ -308,6 +351,7 @@ def findInstruments(request):
 
 
     if request.method == "GET":
+
         if songData:
             return JsonResponse({"instruments": foundInstruments, "song": songData}, status=200)
         
@@ -317,7 +361,8 @@ def findInstruments(request):
 
 
 
-def generateMusicSheet(notesData,artistName, songName, instrumentName):
+def generateMusicSheet(notesData,artistName, songName, instrumentName, midiPath):
+    
     # Create a music21 stream for visualization
     score = stream.Score()
     part = stream.Part()
@@ -335,18 +380,26 @@ def generateMusicSheet(notesData,artistName, songName, instrumentName):
     outputDir = os.path.abspath("generatedMusicSheets")
     os.makedirs(outputDir, exist_ok=True)
 
-    fileName = f"{artistName}_{songName}_{instrumentName}.pdf"
+    fileName = f"{artistName}_{songName}_{instrumentName}.png"
     musicSheetPath = os.path.join(outputDir, fileName)
 
-    try:
-        score.write(fmt='pdf', fp=musicSheetPath)
+    lilypondPath = os.getenv('LILYPOND_PATH')
 
-    except Exception as e:
-        print(f"Error generating PDF: {str(e)}")
-        return f"Error generating sheet: {str(e)}"
+    if lilypondPath:
+        try:
+            # Command to run LilyPond
+            subprocess.run([lilypondPath, midiPath, "-o", musicSheetPath], check=True)
+            print(f"Music sheet generated at: {musicSheetPath}")
+
+        except subprocess.CalledProcessError as e:
+            print(f"Error running LilyPond: {str(e)}")
+            return f"Error generating sheet: {str(e)}"
+        
+    else:
+        print("LilyPond path is not set.")
+        return "LilyPond path is not configured correctly."
 
     return musicSheetPath
-
 
 
 @csrf_exempt
@@ -359,8 +412,8 @@ def generatedNotes(request):
             songName = data.get("song")
             artistName = data.get("artist")
 
-            if not instrumentName or not songName:
-                return JsonResponse({"error": "Missing instrument or song name"}, status=400)   
+            if not instrumentName or not songName or not artistName:
+                return JsonResponse({"error": "Missing instrument, song or artist name"}, status=400)   
 
             instrumentAudioFile = f"separatedInstruments/{artistName} - {songName}/{instrumentName.lower()}.wav"
 
@@ -386,15 +439,17 @@ def generatedNotes(request):
                 instrument.notes.append(note)
                 notesData.append({"pitch": midiNote, "note": pretty_midi.note_number_to_name(midiNote)})
 
-
             midi.instruments.append(instrument)
+
             midiPath = f"generatedNotes/{artistName}_{songName}_{instrumentName}.mid"
             os.makedirs("generatedNotes", exist_ok=True)
             midi.write(midiPath)
 
-            musicSheetPath = generateMusicSheet(notesData, artistName, songName, instrumentName)
+            musicSheetPath = generateMusicSheet(notesData, artistName, songName, instrumentName, midiPath)
+            print(musicSheetPath)
 
-            return JsonResponse({"message": "Notes generated", "midi_path": midiPath, "sheet_path": musicSheetPath}, status=200)
+            return JsonResponse({"message": "Notes generated", "sheetPath": musicSheetPath}, status=200)
+        
 
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON"}, status=400)
@@ -406,34 +461,23 @@ def generatedNotes(request):
     if request.method == "GET":
         try:
             songName = request.GET.get("song")
-            instrument = request.GET.get("instrument")
+            instrument = str(request.GET.get("instrument"))
             artistName = request.GET.get("artist")
 
             if not songName or not instrument:
                 return JsonResponse({"error": "Missing song or instrument name"}, status=400)
 
-            midiPath = f"generatedNotes/{songName}_{instrument}.mid"
+            musicSheetPath = f"generatedMusicSheets/{artistName}_{songName}_{instrument}.png"
 
-            if not os.path.exists(midiPath):
-                return JsonResponse({"error": "MIDI file not found"}, status=404)
-        
-
-            midiData = pretty_midi.PrettyMIDI(midiPath)
-            generatedNotes = []
-
-            for instrument in midiData.instruments:
-                for note in instrument.notes:
-                    generatedNotes.append({"pitch": note.pitch, "note": pretty_midi.note_number_to_name(note.pitch), "start_time": note.start, "end_time": note.end})
-
-            musicSheetPath = f"generatedMusicSheets/{artistName}_{songName}_{instrument}_sheet.png"
+            if not os.path.exists(musicSheetPath):
+                return JsonResponse({"error": "Music sheet not found"}, status=404)
             
-            return JsonResponse({"message": "Notes retrieved", "notes": generatedNotes, "musicSheet": musicSheetPath}, status=200)
+            return JsonResponse({"message": "Notes retrieved", "musicSheet": musicSheetPath}, status=200)
         
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request"}, status=405)
-
 
 
 @csrf_exempt

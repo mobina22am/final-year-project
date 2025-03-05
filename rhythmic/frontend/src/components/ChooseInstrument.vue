@@ -124,7 +124,7 @@ export default{
 
 
         back(){
-            this.$router.push('/getnotes');
+            this.$router.push('/findasong');
         },
 
         logout(){
