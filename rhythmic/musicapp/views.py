@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
 from .models import User
 import matplotlib.pyplot as plt
-from music21 import stream, note, meter, converter
+from music21 import stream, note, meter, converter, layout
 import json
 import librosa
 import pretty_midi
@@ -38,10 +38,6 @@ us = environment.UserSettings()
 
 # Set the LilyPond path for music21 if you're using it
 us['lilypondPath'] = '/opt/homebrew/bin/lilypond'
-
-print(f"LilyPond Path: {us['lilypondPath']}")
-print(f"Temporary directory for music21: {os.environ['M21_TEMP']}")
-
 
 ytUrl = "https://www.youtube.com/results?search_query="
 User = get_user_model()
@@ -361,46 +357,69 @@ def findInstruments(request):
 
 
 
-def generateMusicSheet(notesData,artistName, songName, instrumentName, midiPath):
-    
-    # Create a music21 stream for visualization
+def generateMusicSheet(notesData, artistName, songName, instrumentName):
+
     score = stream.Score()
     part = stream.Part()
     
-    # Add time signature (4/4 time)
     part.append(meter.TimeSignature('4/4'))
+
+    currentMeasure = stream.Measure(number=1)
+    beatsPerMeasure = 4
+    currentBeats = 0  
     
     for noteData in notesData:
         midiNote = noteData['pitch']
-        m21Note = note.Note(midiNote, quarterLength=1.0)  # Set the quarter length to 1 (can be adjusted)
-        part.append(m21Note)
+        m21Note = note.Note(midiNote, quarterLength=1.0)
+
+        currentMeasure.append(m21Note)
+        currentBeats += m21Note.quarterLength
+
+        if currentBeats >= beatsPerMeasure:
+            part.append(currentMeasure)
+            currentMeasure = stream.Measure(number=currentMeasure.number + 1)
+            currentBeats = 0  
+
+    if len(currentMeasure.notes) > 0:
+        part.append(currentMeasure)
 
     score.append(part)
 
+    score.insert(0, layout.StaffGroup([part], name='Single Staff'))
+    
     outputDir = os.path.abspath("generatedMusicSheets")
     os.makedirs(outputDir, exist_ok=True)
 
-    fileName = f"{artistName}_{songName}_{instrumentName}.png"
-    musicSheetPath = os.path.join(outputDir, fileName)
+    fileName = f"{artistName}_{songName}_{instrumentName}"
+    lilypondFilePath = os.path.join(outputDir, f"{fileName}.ly")
 
-    lilypondPath = os.getenv('LILYPOND_PATH')
+    score.write("lilypond", lilypondFilePath)
 
-    if lilypondPath:
-        try:
-            # Command to run LilyPond
-            subprocess.run([lilypondPath, midiPath, "-o", musicSheetPath], check=True)
-            print(f"Music sheet generated at: {musicSheetPath}")
+    with open(lilypondFilePath, "r") as f:
+        lilypondContent = f.read()
 
-        except subprocess.CalledProcessError as e:
-            print(f"Error running LilyPond: {str(e)}")
-            return f"Error generating sheet: {str(e)}"
+    with open(lilypondFilePath, "w") as f:
+        f.write(lilypondContent)
+
+    try:
+        subprocess.run(["lilypond", "--png", "-o", outputDir, lilypondFilePath], check=True)
         
-    else:
-        print("LilyPond path is not set.")
-        return "LilyPond path is not configured correctly."
+        musicSheetPath = os.path.join(outputDir, f"{fileName}.png")
+        
+        if os.path.exists(musicSheetPath):
+            print(f"Music sheet generated at: {musicSheetPath}")
+            return musicSheetPath
+        else:
+            print("LilyPond did not generate a PNG file.")
+            return "Error: LilyPond did not generate a PNG file."
 
-    return musicSheetPath
+    except subprocess.CalledProcessError as e:
+        print(f"Error running LilyPond: {str(e)}")
+        return f"Error generating sheet: {str(e)}"
+    
 
+
+    
 
 @csrf_exempt
 def generatedNotes(request):
@@ -445,7 +464,7 @@ def generatedNotes(request):
             os.makedirs("generatedNotes", exist_ok=True)
             midi.write(midiPath)
 
-            musicSheetPath = generateMusicSheet(notesData, artistName, songName, instrumentName, midiPath)
+            musicSheetPath = generateMusicSheet(notesData, artistName, songName, instrumentName)
             print(musicSheetPath)
 
             return JsonResponse({"message": "Notes generated", "sheetPath": musicSheetPath}, status=200)
