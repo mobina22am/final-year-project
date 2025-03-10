@@ -57,7 +57,6 @@ export default{
 
                     router.push('/mainpage');
                 }
-
             }
 
             catch(error){
@@ -69,8 +68,6 @@ export default{
                     alert("error during login");
                 }
             }
-        
-        
         },
 
         backFunction(){

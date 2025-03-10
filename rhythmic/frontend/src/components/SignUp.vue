@@ -18,24 +18,20 @@
                 <input type="text" v-model="form.username" id="username" name="username" required>
             </div>
 
-
             <div class="inputs">
                 <label for="email">Email:</label>
                 <input type="email" v-model="form.email" id="email" name="email" pattern="[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+"  required>
             </div>
-
 
             <div class="inputs">
                 <label for="password">Password:</label>
                 <input type="password" v-model="form.password" id="password" name="password" pattern="(?=.*\d)[A-Za-z\d]{6,}" required>
             </div>
 
-
             <div class="inputs">
                 <label for="confirmPassword">Confirm Password:</label>
                 <input type="password" v-model="form.confirmPassword" id="confirmPassword" name="confirmPassword" pattern="(?=.*\d)[A-Za-z\d]{6,}" required>
             </div>
-
 
             <div id="signUpButtons">
                 <button type="button" id="back" @click="backFunction">Back</button>
@@ -88,7 +84,6 @@ export default{
                     router.push('/mainpage');
                 } 
             }
-        
 
             catch(error){
 

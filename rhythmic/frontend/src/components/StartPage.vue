@@ -1,4 +1,5 @@
 <template>
+    
     <h1>WELCOME TO RHYTHMIC</h1>
 
     <div id="startPageButtons">
@@ -8,8 +9,8 @@
 
 </template>
 
-
 <script>
+
 import router from '../router';
 
 export default{
