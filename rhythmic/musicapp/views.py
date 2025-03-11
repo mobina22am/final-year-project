@@ -357,8 +357,9 @@ def findInstruments(request):
 
 
 
-def generateMusicSheet(notesData, artistName, songName, instrumentName):
 
+
+def generateMusicSheet(notesData, artistName, songName, instrumentName):
     score = stream.Score()
     part = stream.Part()
     
@@ -367,7 +368,7 @@ def generateMusicSheet(notesData, artistName, songName, instrumentName):
     currentMeasure = stream.Measure(number=1)
     beatsPerMeasure = 4
     currentBeats = 0  
-    
+
     for noteData in notesData:
         midiNote = noteData['pitch']
         m21Note = note.Note(midiNote, quarterLength=1.0)
@@ -385,39 +386,62 @@ def generateMusicSheet(notesData, artistName, songName, instrumentName):
 
     score.append(part)
 
-    score.insert(0, layout.StaffGroup([part], name='Single Staff'))
-    
     outputDir = os.path.abspath("generatedMusicSheets")
     os.makedirs(outputDir, exist_ok=True)
 
     fileName = f"{artistName}_{songName}_{instrumentName}"
     lilypondFilePath = os.path.join(outputDir, f"{fileName}.ly")
+    pdfFilePath = os.path.join(outputDir, f"{fileName}.pdf")
+    pngFilePath = os.path.join(outputDir, f"{fileName}.png")
 
-    score.write("lilypond", lilypondFilePath)
+    # **Generate LilyPond Content with Smaller Font & Single Page**
+    lilypondContent = r"""
+    \version "2.24.2"
+    \paper {
+        indent = 0\mm
+        line-width = 200\mm
+        ragged-right = ##t
+        ragged-bottom = ##t
+        system-count = #1  % Force all notes onto 1 page
+    }
+    \layout {
+        \context {
+            \Score
+            \override SpacingSpanner.base-shortest-duration = #(ly:make-moment 1/8)
+        }
+    }
+    \new Staff {
+        c'4 d'4 e'4 f'4 g'4 a'4 b'4 c''4
+    """ 
+    
 
-    with open(lilypondFilePath, "r") as f:
-        lilypondContent = f.read()
+    for noteData in notesData:
+        pitch = noteData['note'].replace("#", "is")  # LilyPond notation for sharps
+        lilypondContent += f" {pitch}4"
+
+    lilypondContent += "\n}"
 
     with open(lilypondFilePath, "w") as f:
         f.write(lilypondContent)
 
+    # **Generate PDF First (Less Memory Intensive)**
     try:
-        subprocess.run(["lilypond", "--png", "-o", outputDir, lilypondFilePath], check=True)
-        
-        musicSheetPath = os.path.join(outputDir, f"{fileName}.png")
-        
-        if os.path.exists(musicSheetPath):
-            print(f"Music sheet generated at: {musicSheetPath}")
-            return musicSheetPath
+        subprocess.run(["lilypond", "--pdf", "-o", outputDir, lilypondFilePath], check=True)
+
+        if os.path.exists(pdfFilePath):
+            # Convert PDF to PNG
+            subprocess.run(["convert", "-density", "300", pdfFilePath, pngFilePath], check=True)
+
+        if os.path.exists(pngFilePath):
+            print(f"Music sheet generated at: {pngFilePath}")
+            return pngFilePath
         else:
-            print("LilyPond did not generate a PNG file.")
-            return "Error: LilyPond did not generate a PNG file."
+            print("Conversion to PNG failed.")
+            return "Error: Conversion to PNG failed."
 
     except subprocess.CalledProcessError as e:
         print(f"Error running LilyPond: {str(e)}")
         return f"Error generating sheet: {str(e)}"
-    
-
 
     
 
