@@ -402,21 +402,14 @@ def generateMusicSheet(notesData, artistName, songName, instrumentName):
         line-width = 200\mm
         ragged-right = ##t
         ragged-bottom = ##t
-        system-count = #1  % Force all notes onto 1 page
+        system-count = #1
     }
-    \layout {
-        \context {
-            \Score
-            \override SpacingSpanner.base-shortest-duration = #(ly:make-moment 1/8)
-        }
-    }
+    \layout { }
     \new Staff {
-        c'4 d'4 e'4 f'4 g'4 a'4 b'4 c''4
-    """ 
-    
+    """
 
     for noteData in notesData:
-        pitch = noteData['note'].replace("#", "is")  # LilyPond notation for sharps
+        pitch = noteData['note'].lower().replace("#", "is")  # LilyPond uses 'is' for sharps
         lilypondContent += f" {pitch}4"
 
     lilypondContent += "\n}"
@@ -426,7 +419,7 @@ def generateMusicSheet(notesData, artistName, songName, instrumentName):
 
     # **Generate PDF First (Less Memory Intensive)**
     try:
-        subprocess.run(["lilypond", "--pdf", "-o", outputDir, lilypondFilePath], check=True)
+        subprocess.run(["lilypond", "-dpreview", "--pdf", "-o", outputDir, lilypondFilePath], check=True)
 
         if os.path.exists(pdfFilePath):
             # Convert PDF to PNG
