@@ -358,8 +358,11 @@ def findInstruments(request):
 
 
 
-
 def generateMusicSheet(notesData, artistName, songName, instrumentName):
+    import os
+    import subprocess
+    from music21 import stream, note, meter
+
     score = stream.Score()
     part = stream.Part()
     
@@ -368,6 +371,7 @@ def generateMusicSheet(notesData, artistName, songName, instrumentName):
     currentMeasure = stream.Measure(number=1)
     beatsPerMeasure = 4
     currentBeats = 0  
+    measureCount = 0  
 
     for noteData in notesData:
         midiNote = noteData['pitch']
@@ -379,7 +383,8 @@ def generateMusicSheet(notesData, artistName, songName, instrumentName):
         if currentBeats >= beatsPerMeasure:
             part.append(currentMeasure)
             currentMeasure = stream.Measure(number=currentMeasure.number + 1)
-            currentBeats = 0  
+            currentBeats = 0
+            measureCount += 1  
 
     if len(currentMeasure.notes) > 0:
         part.append(currentMeasure)
@@ -394,32 +399,47 @@ def generateMusicSheet(notesData, artistName, songName, instrumentName):
     pdfFilePath = os.path.join(outputDir, f"{fileName}.pdf")
     pngFilePath = os.path.join(outputDir, f"{fileName}.png")
 
-    # **Generate LilyPond Content with Smaller Font & Single Page**
+    # **Generate LilyPond Content with Proper Line Breaks**
     lilypondContent = r"""
-    \version "2.24.2"
-    \paper {
-        indent = 0\mm
-        line-width = 200\mm
-        ragged-right = ##t
-        ragged-bottom = ##t
-        system-count = #1
+\version "2.24.2"
+\paper {
+    indent = 0\mm
+    line-width = 180\mm
+    ragged-right = ##t
+    ragged-bottom = ##t
+}
+\layout {
+    \context {
+        \Score
+        \override SpacingSpanner.base-shortest-duration = #(ly:make-moment 1/8)
     }
-    \layout { }
-    \new Staff {
-    """
+}
+\new Staff {
+"""
+
+    notes_per_measure = 4  # 4/4 time signature, so 4 quarter notes per measure
+    measures_per_line = 4  # **Force a new line every 4 measures**
+    note_counter = 0
+    measure_counter = 0
 
     for noteData in notesData:
-        pitch = noteData['note'].lower().replace("#", "is")  # LilyPond uses 'is' for sharps
+        pitch = noteData['note'].lower().replace("#", "is")  # LilyPond notation for sharps
         lilypondContent += f" {pitch}4"
+        note_counter += 1
+
+        if note_counter % notes_per_measure == 0:
+            measure_counter += 1
+            if measure_counter % measures_per_line == 0:  # **Break every 4 measures**
+                lilypondContent += " \break"
 
     lilypondContent += "\n}"
 
     with open(lilypondFilePath, "w") as f:
         f.write(lilypondContent)
 
-    # **Generate PDF First (Less Memory Intensive)**
+    # **Generate PDF First**
     try:
-        subprocess.run(["lilypond", "-dpreview", "--pdf", "-o", outputDir, lilypondFilePath], check=True)
+        subprocess.run(["lilypond", "--pdf", "-o", outputDir, lilypondFilePath], check=True)
 
         if os.path.exists(pdfFilePath):
             # Convert PDF to PNG
@@ -435,6 +455,9 @@ def generateMusicSheet(notesData, artistName, songName, instrumentName):
     except subprocess.CalledProcessError as e:
         print(f"Error running LilyPond: {str(e)}")
         return f"Error generating sheet: {str(e)}"
+    
+
+    
 
     
 
@@ -503,7 +526,7 @@ def generatedNotes(request):
             if not songName or not instrument:
                 return JsonResponse({"error": "Missing song or instrument name"}, status=400)
 
-            musicSheetPath = f"generatedMusicSheets/{artistName}_{songName}_{instrument}.png"
+            musicSheetPath = f"generatedMusicSheets/{artistName}_{songName}_{instrument}.pdf"
 
             if not os.path.exists(musicSheetPath):
                 return JsonResponse({"error": "Music sheet not found"}, status=404)
