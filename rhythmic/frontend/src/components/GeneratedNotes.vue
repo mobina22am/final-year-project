@@ -20,7 +20,7 @@
         <h1>Generated Notes For "{{ songName }}" By "{{ artistName }}" For "{{ instrument }}"</h1>
         
         <div v-if="musicSheet">
-            <img :src="musicSheet" style="max-width: 100%; height: auto;"/>
+            <iframe v-if="musicSheet" :src="musicSheet" width="100%" height="600px"></iframe>
         </div>
 
         <button type="button" id="back" @click="back">Back</button>
@@ -63,7 +63,7 @@ export default{
             
             const response = await axios.get('http://localhost:8000/generatednotes', {params: {song: this.songName, artist: this.artistName, instrument: this.instrument}, withCredentials: true});
 
-            if (response.status === 200) {
+            if (response.status === 200 && response.data.musicSheet) {
                 this.musicSheet = response.data.musicSheet;
             }
 
