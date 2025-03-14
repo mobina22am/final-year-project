@@ -12,14 +12,13 @@ class StoredSongs(models.Model):
     name = models.CharField(max_length=100)
     artist = models.CharField(max_length=100)
     details = models.TextField()
-    notes = models.TextField()
     instrument = models.CharField(max_length=100, blank=True)
-    created_at = models.DateTimeField(default=timezone.now)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
-
+    pdfFile = models.FileField(upload_to="music_sheets/", blank=True, null=True)  # Save PDF file
+    createdAt = models.DateTimeField(default=timezone.now)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.name} by {self.artist} ({self.instrument})"
     
 
 

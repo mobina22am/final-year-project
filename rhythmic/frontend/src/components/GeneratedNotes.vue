@@ -20,10 +20,11 @@
         <h1>Generated Notes For "{{ songName }}" By "{{ artistName }}" For "{{ instrument }}"</h1>
         
         <div v-if="musicSheet">
-            <iframe v-if="musicSheet" :src="musicSheet" width="100%" height="600px"></iframe>
+            <iframe v-if="musicSheet" :src="'http://localhost:8000' + musicSheet" width="100%" height="550px"></iframe>
         </div>
 
         <button type="button" id="back" @click="back">Back</button>
+        <button type="button" id="saveSheet" @click="saveSheet">Save</button>
 
     </div>
 </template>
@@ -85,6 +86,25 @@ export default{
     },
 
     methods: {
+
+        async saveSheet() {
+            try {
+                const response = await axios.post('http://localhost:8000/saveMusicSheet', {
+                    song: this.songName,
+                    artist: this.artistName,
+                    instrument: this.instrument,
+                    pdfPath: this.musicSheet
+                }, { withCredentials: true });
+
+                if (response.status === 201) {
+                    alert('Music sheet saved successfully!');
+                } else {
+                    alert(response.data.error);
+                }
+            } catch (error) {
+                alert(error.response?.data?.error || 'Saving music sheet failed.');
+            }
+        },
 
         back(){
             this.$router.push('/chooseinstrument');
@@ -155,7 +175,24 @@ h1{
     font-size: 20px;
     position: absolute;
     bottom: 0;
-    right: 45%;
+    right: 65%;
+    margin-bottom: 2%;
+}
+
+
+#saveSheet{
+    background-color: #ffffff;
+    color: black;
+    border: none;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    border-radius: 18px;
+    font-size: 20px;
+    position: absolute;
+    bottom: 0;
+    left: 65%;
     margin-bottom: 2%;
 }
 

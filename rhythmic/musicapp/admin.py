@@ -11,6 +11,6 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(StoredSongs)
 class StoredSongsAdmin(admin.ModelAdmin):
-    list_display = ('name', 'artist', 'details', 'notes', 'instrument', 'created_at', 'user')
-    list_filter = ('name', 'artist', 'details', 'instrument', 'created_at', 'user')
-    search_fields = ('name', 'artist', 'details', 'instrument', 'created_at', 'user')
+    list_display = ('name', 'artist', 'details', 'instrument', 'pdfFile', 'createdAt', 'user')
+    list_filter = ('name', 'artist', 'details', 'instrument', 'pdfFile', 'createdAt', 'user')
+    search_fields = ('name', 'artist', 'details', 'instrument', 'pdfFile', 'createdAt', 'user')

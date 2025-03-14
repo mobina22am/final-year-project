@@ -3,7 +3,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.http import JsonResponse, HttpResponse
 from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
-from .models import User
+from .models import User, StoredSongs
 import matplotlib.pyplot as plt
 from music21 import stream, note, meter, converter, layout
 import json
@@ -20,6 +20,10 @@ matplotlib.use('Agg')
 import re
 import base64
 from music21 import environment
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.shortcuts import render
+from django.shortcuts import get_object_or_404
+from django.contrib.auth.decorators import login_required
 # from spleeter.separator import Separator
 # import soundfile as sf
 # import tempfile
@@ -375,7 +379,8 @@ def generateMusicSheet(notesData, artistName, songName, instrumentName):
 
     for noteData in notesData:
         midiNote = noteData['pitch']
-        m21Note = note.Note(midiNote, quarterLength=1.0)
+        duration = noteData.get('duration', 1.0)
+        m21Note = note.Note(midiNote, quarterLength=duration)
 
         currentMeasure.append(m21Note)
         currentBeats += m21Note.quarterLength
@@ -397,7 +402,6 @@ def generateMusicSheet(notesData, artistName, songName, instrumentName):
     fileName = f"{artistName}_{songName}_{instrumentName}"
     lilypondFilePath = os.path.join(outputDir, f"{fileName}.ly")
     pdfFilePath = os.path.join(outputDir, f"{fileName}.pdf")
-    pngFilePath = os.path.join(outputDir, f"{fileName}.png")
 
     # **Generate LilyPond Content with Proper Line Breaks**
     lilypondContent = r"""
@@ -424,13 +428,21 @@ def generateMusicSheet(notesData, artistName, songName, instrumentName):
 
     for noteData in notesData:
         pitch = noteData['note'].lower().replace("#", "is")  # LilyPond notation for sharps
-        lilypondContent += f" {pitch}4"
+
+
+        duration = noteData.get("duration", "4")
+        if duration not in ["1", "2", "4", "8", "16"]:  # Ensure valid durations
+            duration = "4"  # Default to quarter note if invalid
+
+        
+
+        lilypondContent += f" {pitch}{duration}"
         note_counter += 1
 
         if note_counter % notes_per_measure == 0:
             measure_counter += 1
             if measure_counter % measures_per_line == 0:  # **Break every 4 measures**
-                lilypondContent += " \break"
+                lilypondContent += " \n\\break\n"
 
     lilypondContent += "\n}"
 
@@ -442,15 +454,11 @@ def generateMusicSheet(notesData, artistName, songName, instrumentName):
         subprocess.run(["lilypond", "--pdf", "-o", outputDir, lilypondFilePath], check=True)
 
         if os.path.exists(pdfFilePath):
-            # Convert PDF to PNG
-            subprocess.run(["convert", "-density", "300", pdfFilePath, pngFilePath], check=True)
-
-        if os.path.exists(pngFilePath):
-            print(f"Music sheet generated at: {pngFilePath}")
-            return pngFilePath
+            print(f"Music sheet generated at: {pdfFilePath}")
+            return pdfFilePath
         else:
-            print("Conversion to PNG failed.")
-            return "Error: Conversion to PNG failed."
+            print("Error: PDF not generated.")
+            return "Error: PDF not generated."
 
     except subprocess.CalledProcessError as e:
         print(f"Error running LilyPond: {str(e)}")
@@ -460,7 +468,7 @@ def generateMusicSheet(notesData, artistName, songName, instrumentName):
     
 
     
-
+@xframe_options_exempt
 @csrf_exempt
 def generatedNotes(request):
 
@@ -531,12 +539,55 @@ def generatedNotes(request):
             if not os.path.exists(musicSheetPath):
                 return JsonResponse({"error": "Music sheet not found"}, status=404)
             
-            return JsonResponse({"message": "Notes retrieved", "musicSheet": musicSheetPath}, status=200)
+            return JsonResponse({"message": "Notes retrieved", "musicSheet": f"/generatedMusicSheets/{artistName}_{songName}_{instrument}.pdf"}, status=200)
         
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request"}, status=405)
+
+
+
+@csrf_exempt
+@login_required
+def saveMusicSheet(request):
+
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body.decode("utf-8"))
+            user = request.user  # Get logged-in user
+            songName = data.get("song")
+            artistName = data.get("artist")
+            instrument = data.get("instrument")
+            pdfPath = data.get("pdfPath")  # PDF file path
+
+            if not songName or not artistName or not pdfPath:
+                return JsonResponse({"error": "Missing required fields"}, status=400)
+
+            # Check if the song is already stored
+            if StoredSongs.objects.filter(user=user, name=songName, artist=artistName, instrument=instrument).exists():
+                return JsonResponse({"error": "Music sheet already stored"}, status=409)
+
+            # Save the stored song record
+            stored_song = StoredSongs.objects.create(
+                user=user,
+                name=songName,
+                artist=artistName,
+                instrument=instrument,
+                details=f"Music sheet for {songName} by {artistName}",
+                pdf_file=pdfPath
+            )
+
+            return JsonResponse({"message": "Music sheet stored successfully", "stored_song_id": stored_song.id}, status=201)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
 
 
 @csrf_exempt
