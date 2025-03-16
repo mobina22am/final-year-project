@@ -24,6 +24,8 @@ from django.views.decorators.clickjacking import xframe_options_exempt
 from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 # from spleeter.separator import Separator
 # import soundfile as sf
 # import tempfile
@@ -547,12 +549,12 @@ def generatedNotes(request):
     return JsonResponse({"error": "Invalid request"}, status=405)
 
 
+
 @csrf_exempt
 @login_required
 def saveMusicSheet(request):
     if request.method == "POST":
         try:
-
             # Get the form data and file
             songName = request.POST.get("song")
             artistName = request.POST.get("artist")
@@ -568,12 +570,12 @@ def saveMusicSheet(request):
 
             # Save the stored song record
             storedSong = StoredSongs.objects.create(
-                user = request.user,
-                name = songName,
-                artist = artistName,
-                instrument = instrument,
-                details = f"Music sheet for {songName} by {artistName}",
-                pdfFile = pdfFile.read()
+                user=request.user,
+                name=songName,
+                artist=artistName,
+                instrument=instrument,
+                details=f"Music sheet for {songName} by {artistName}",
+                pdfFile=pdfFile  # Save the file directly (don't use read())
             )
 
             return JsonResponse({"message": "Music sheet stored successfully", "storedSongId": storedSong.id}, status=201)
@@ -582,6 +584,7 @@ def saveMusicSheet(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
+
 
 
 @login_required

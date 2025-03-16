@@ -11,6 +11,11 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(StoredSongs)
 class StoredSongsAdmin(admin.ModelAdmin):
-    list_display = ('name', 'artist', 'details', 'instrument', 'pdfFile', 'createdAt', 'user')
-    list_filter = ('name', 'artist', 'details', 'instrument', 'pdfFile', 'createdAt', 'user')
-    search_fields = ('name', 'artist', 'details', 'instrument', 'pdfFile', 'createdAt', 'user')
+    list_display = ('name', 'artist', 'instrument', 'pdfFile')
+
+    def pdfFile(self, obj):
+        if obj.pdfFile:
+            return f'<a href="{obj.pdfFile.url}" target="_blank">View PDF</a>'
+        return 'No PDF'
+
+    pdfFile.allow_tags = True
