@@ -89,27 +89,29 @@ export default{
 
         async saveSheet() {
             try {
-                // Create a new FormData object
-                let formData = new FormData();
-                formData.append("song", this.songName); // Add song name
-                formData.append("artist", this.artistName); // Add artist name
-                formData.append("instrument", this.instrument); // Add instrument
-                formData.append("pdfFile", this.musicSheet); // Add the PDF file (this is your actual file)
+                const response = await fetch(this.musicSheet); // Fetch the actual PDF file
+                const blob = await response.blob(); // Convert response to Blob
+                const file = new File([blob], "music_sheet.pdf", { type: "application/pdf" }); // Create a File object
 
-                // Make the request using FormData (multipart/form-data)
-                const response = await axios.post('http://localhost:8000/savemusicsheet', formData, {
-                    headers: {
-                        "Content-Type": "multipart/form-data"
-                    },
+                let formData = new FormData();
+                formData.append("song", this.songName);
+                formData.append("artist", this.artistName);
+                formData.append("instrument", this.instrument);
+                formData.append("pdfFile", file); // Attach the actual file
+
+                const saveResponse = await axios.post('http://localhost:8000/savemusicsheet', formData, {
+                    headers: { "Content-Type": "multipart/form-data" },
                     withCredentials: true
                 });
 
-                if (response.status === 201) {
+                if (saveResponse.status === 201) {
                     alert('Music sheet saved successfully!');
                 } else {
-                    alert(response.data.error);
+                    alert(saveResponse.data.error);
                 }
-            } catch (error) {
+            } 
+            
+            catch (error) {
                 alert(error.response?.data?.error || 'Saving music sheet failed.');
             }
         },

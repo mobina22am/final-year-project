@@ -552,6 +552,7 @@ def generatedNotes(request):
 def saveMusicSheet(request):
     if request.method == "POST":
         try:
+
             # Get the form data and file
             songName = request.POST.get("song")
             artistName = request.POST.get("artist")
@@ -566,20 +567,53 @@ def saveMusicSheet(request):
                 return JsonResponse({"error": "Music sheet already stored"}, status=409)
 
             # Save the stored song record
-            stored_song = StoredSongs.objects.create(
-                user=request.user,
-                name=songName,
-                artist=artistName,
-                instrument=instrument,
-                details=f"Music sheet for {songName} by {artistName}",
-                pdfFile=pdfFile  # Save the PDF file
+            storedSong = StoredSongs.objects.create(
+                user = request.user,
+                name = songName,
+                artist = artistName,
+                instrument = instrument,
+                details = f"Music sheet for {songName} by {artistName}",
+                pdfFile = pdfFile.read()
             )
 
-            return JsonResponse({"message": "Music sheet stored successfully", "stored_song_id": stored_song.id}, status=201)
+            return JsonResponse({"message": "Music sheet stored successfully", "storedSongId": storedSong.id}, status=201)
 
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+@login_required
+def getSavedSongs(request):
+    if request.method == "GET":
+        try:
+            songs = StoredSongs.objects.filter(user=request.user).values("id", "name", "artist", "instrument")
+            return JsonResponse({"songs": list(songs)}, status=200)
+        
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+        
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+
+
+@login_required
+def getMusicSheet(request, songId):
+    if request.method == "GET":
+        try:
+            storedSong = get_object_or_404(StoredSongs, id=songId, user=request.user)
+
+            if not storedSong.pdfFile:
+                return JsonResponse({"error": "No PDF found for this song"}, status=404)
+
+            response = HttpResponse(storedSong.pdfFile, content_type='application/pdf')
+            response['Content-Disposition'] = f'inline; filename="{storedSong.name}.pdf"'
+            return response
+        
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+        
     return JsonResponse({"error": "Invalid request method"}, status=405)
 
 

@@ -13,6 +13,8 @@ urlpatterns = [
     path('findinstruments', views.findInstruments, name='findInstruments'),
     path('generatednotes', views.generatedNotes, name='generatedNotes'),
     path("savemusicsheet", views.saveMusicSheet, name="saveMusicSheet"),
+    path('getsavedsongs/', views.getSavedSongs, name='get-saved-songs'),
+    path('getmusicsheet/<int:songId>/', views.getMusicSheet, name='getMusicSheet'),
 ]
 
 

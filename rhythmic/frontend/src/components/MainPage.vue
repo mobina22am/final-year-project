@@ -22,7 +22,7 @@
 
             <div id="homeButtons">
                 <button type="button" id="notes" @click="getNotes">Get Notes</button>
-                <button type="button" id="folders" @click="accessFolders">Access Folsers</button>
+                <button type="button" id="folders" @click="accessFolders">Access Folder</button>
             </div>
 
         </form>
@@ -52,7 +52,7 @@ export default {
         },
 
         accessFolders(){
-            this.$router.push('/folders');
+            this.$router.push('/accessfolder');
         },
 
         logout(){
