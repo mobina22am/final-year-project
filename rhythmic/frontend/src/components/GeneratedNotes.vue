@@ -89,12 +89,20 @@ export default{
 
         async saveSheet() {
             try {
-                const response = await axios.post('http://localhost:8000/saveMusicSheet', {
-                    song: this.songName,
-                    artist: this.artistName,
-                    instrument: this.instrument,
-                    pdfPath: this.musicSheet
-                }, { withCredentials: true });
+                // Create a new FormData object
+                let formData = new FormData();
+                formData.append("song", this.songName); // Add song name
+                formData.append("artist", this.artistName); // Add artist name
+                formData.append("instrument", this.instrument); // Add instrument
+                formData.append("pdfFile", this.musicSheet); // Add the PDF file (this is your actual file)
+
+                // Make the request using FormData (multipart/form-data)
+                const response = await axios.post('http://localhost:8000/savemusicsheet', formData, {
+                    headers: {
+                        "Content-Type": "multipart/form-data"
+                    },
+                    withCredentials: true
+                });
 
                 if (response.status === 201) {
                     alert('Music sheet saved successfully!');

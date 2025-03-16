@@ -13,7 +13,7 @@ class StoredSongs(models.Model):
     artist = models.CharField(max_length=100)
     details = models.TextField()
     instrument = models.CharField(max_length=100, blank=True)
-    pdfFile = models.FileField(upload_to="music_sheets/", blank=True, null=True)  # Save PDF file
+    pdfFile = models.BinaryField(blank=True, null=True)
     createdAt = models.DateTimeField(default=timezone.now)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 

@@ -18,6 +18,21 @@
 
         <h1>Choose Instrument</h1>
 
+
+        <div id="popUpWindow" v-if="popup">
+            <div id="insidePopUp">
+                <h2>Note Generation Started</h2>
+                <h3 class="inform">Please wait for the system to complete the note generation</h3>
+                <h3 class="inform">This is going to take only a few moments</h3>
+
+                <div id="loading">
+                    <div id="loadingCircle">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
         <div id="tableDiv">
             <table v-if="instruments.length > 0" id="instrumentsTable">
 
@@ -56,7 +71,8 @@ export default{
         return{
             song: '',
             artist: '',
-            instruments: []
+            instruments: [],
+            popup: false,
         }
     },
 
@@ -94,6 +110,7 @@ export default{
         async instrumentChosen(instrument){
 
             try{
+                this.popup = true,
 
                 console.log("Request Payload:", {instrument: instrument, song: this.song.name, artist: this.song.artist});
                 
@@ -249,6 +266,62 @@ th{
     bottom: 0;
     right: 45%;
     margin-bottom: 2%;
+}
+
+
+
+#popUpWindow{
+    background-color: white;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    padding: 50px;
+    border: black 2px solid;   
+    height: 100%;
+    width: 100%;
+    background-color: rgba(0, 0, 0, 0.5); 
+}
+
+#insidePopUp{
+    background-color: white;
+    padding: 50px;
+    border-radius: 20px;
+    text-align: center;
+    font-size: 20px;
+    color: black;
+}
+
+.inform{
+    margin-top: 20px;
+    font-size: 20px;
+    color: red;
+    text-align: center;
+}
+
+#loading{
+    text-align: center;
+    margin-top: 20px;
+}
+
+#loadingCircle {
+    border: 10px solid #f3f3f3;
+    border-top: 10px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 2s linear infinite;
+    display: inline-block;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 </style>

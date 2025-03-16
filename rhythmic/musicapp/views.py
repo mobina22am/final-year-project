@@ -547,46 +547,40 @@ def generatedNotes(request):
     return JsonResponse({"error": "Invalid request"}, status=405)
 
 
-
 @csrf_exempt
 @login_required
 def saveMusicSheet(request):
-
     if request.method == "POST":
         try:
-            data = json.loads(request.body.decode("utf-8"))
-            user = request.user  # Get logged-in user
-            songName = data.get("song")
-            artistName = data.get("artist")
-            instrument = data.get("instrument")
-            pdfPath = data.get("pdfPath")  # PDF file path
+            # Get the form data and file
+            songName = request.POST.get("song")
+            artistName = request.POST.get("artist")
+            instrument = request.POST.get("instrument")
+            pdfFile = request.FILES.get("pdfFile")  # Get the file from the form data
 
-            if not songName or not artistName or not pdfPath:
+            if not songName or not artistName or not pdfFile:
                 return JsonResponse({"error": "Missing required fields"}, status=400)
 
             # Check if the song is already stored
-            if StoredSongs.objects.filter(user=user, name=songName, artist=artistName, instrument=instrument).exists():
+            if StoredSongs.objects.filter(user=request.user, name=songName, artist=artistName, instrument=instrument).exists():
                 return JsonResponse({"error": "Music sheet already stored"}, status=409)
 
             # Save the stored song record
             stored_song = StoredSongs.objects.create(
-                user=user,
+                user=request.user,
                 name=songName,
                 artist=artistName,
                 instrument=instrument,
                 details=f"Music sheet for {songName} by {artistName}",
-                pdf_file=pdfPath
+                pdfFile=pdfFile  # Save the PDF file
             )
 
             return JsonResponse({"message": "Music sheet stored successfully", "stored_song_id": stored_song.id}, status=201)
 
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON"}, status=400)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
-
 
 
 
