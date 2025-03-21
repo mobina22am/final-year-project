@@ -13,6 +13,8 @@
                 <input type="password" v-model="form.password" id="password" name="password" pattern="(?=.*\d)[A-Za-z\d]{6,}" required>
             </div>
 
+            <p id="forgotten" @click="forgotten">Forgotten username or password</p>
+
             <div id="logInButtons">
                 <button type="button" id="back" @click="backFunction">Back</button>
                 <button type="submit" id="submit" @click="submitForm">Submit</button>
@@ -72,6 +74,10 @@ export default{
 
         backFunction(){
             router.push('/');
+        },
+
+        forgotten(){
+            router.push('/forgotcredentials');
         }
     }
 };
@@ -100,9 +106,18 @@ form{
     display: grid;
     grid-template-areas: 'back submit';
     justify-content: center;
-    margin-top: 7%;
+    margin-top: 3%;
     grid-gap: 35%;
 }
+
+#forgotten{
+    color: rgb(214, 234, 58);
+}
+
+#forgotten:hover{
+    color: white;
+}
+
 
 #back, #submit{
     background-color: #ffffff;

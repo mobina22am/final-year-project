@@ -10,6 +10,8 @@ import FindASong from '@/components/FindASong.vue';
 import ChooseInstrument from '@/components/ChooseInstrument.vue'; 
 import GeneratedNotes from '@/components/GeneratedNotes.vue';
 import AccessFolder from '@/components/AccessFolder.vue';
+import ForgotCredentials from '@/components/ForgotCredentials.vue';
+import ResetPassword from '@/components/ResetPassword.vue';
 
 const routes = [
   { path: '/', name: 'StartPage', component: StartPage },
@@ -22,6 +24,8 @@ const routes = [
   { path: '/chooseinstrument', name: 'ChooseInstrument', component: ChooseInstrument},
   { path: '/generatednotes', name: 'GeneratedNotes', component: GeneratedNotes},
   { path: '/accessfolder', name: 'AccessFolder', component: AccessFolder},
+  { path: '/forgotcredentials', name: 'ForgotCredentials', component: ForgotCredentials},
+  { path: '/resetpassword', name: 'ResetPassword', component: ResetPassword}
 ];
 
 const router = createRouter({

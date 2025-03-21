@@ -26,6 +26,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
+from django.contrib.auth.hashers import make_password
 # from spleeter.separator import Separator
 # import soundfile as sf
 # import tempfile
@@ -123,6 +124,45 @@ def userLogin(request):
 
     return JsonResponse({"error": "Invalid method"}, status=405)
 
+
+@csrf_exempt
+def forgotCredentials(request):
+
+    if request.method == 'POST':
+
+        data = json.loads(request.body)
+
+        name = data.get('name')
+        email = data.get('email')
+        birthday = data.get('birthday')
+
+        user = User.objects.filter(first_name=name, email=email, birthday=birthday).first()
+
+        if user:
+            return JsonResponse({"message": f"Your username is {user.username}. If you forgot your password, please reset it."}, status=200)
+        else:
+            return JsonResponse({"error": "No user found with the provided details"}, status=400)
+
+
+
+@csrf_exempt
+def resetPassword(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+
+        name = data.get('name')
+        email = data.get('email')
+        birthday = data.get('birthday')
+        newPassword = data.get('newPassword')
+
+        user = User.objects.filter(first_name=name, email=email, birthday=birthday).first()
+
+        if user:
+            user.password = make_password(newPassword)  # Hash the new password
+            user.save()
+            return JsonResponse({"message": "Your password has been successfully reset."}, status=200)
+        else:
+            return JsonResponse({"error": "No user found with the provided details"}, status=400)
 
 
 @csrf_exempt

@@ -11,8 +11,8 @@
                 <i class='bx bx-log-out'></i>
             </button>
 
-            <button type="button" id="profile" @click="profile">
-                <i class='bx bx-user'></i>
+            <button type="button" id="main" @click="main">
+                <i class='bx bx-home'></i>
             </button>
         </div>
 
@@ -23,6 +23,7 @@
             <div id="homeButtons">
                 <button type="button" id="notes" @click="getNotes">Get Notes</button>
                 <button type="button" id="folders" @click="accessFolders">Access Folder</button>
+                <button type="button" id="profile" @click="editProfile">Edit Profile</button>
             </div>
 
         </form>
@@ -60,8 +61,12 @@ export default {
             this.$router.push('/');
         },
 
-        profile(){
+        editProfile(){
             this.$router.push('/profile');
+        },
+
+        main(){
+            this.$router.push('/mainpage');
         }
     }
 }
@@ -90,11 +95,11 @@ form{
     display: grid;
     grid-template-areas: 'notes' 'folders';
     justify-content: center;
-    margin-top: 7%;
-    grid-gap: 90%;
+    margin-top: 3%;
+    grid-gap: 40%;
 }
 
-#notes, #folders{
+#notes, #folders, #profile{
     background-color: #ffffff;
     color: black;
     border: none;
@@ -129,7 +134,7 @@ form{
     left: 0;
 }
 
-#profile{
+#main{
     background-color: #ffffff00;
     color: rgb(255, 255, 255);
     border: none;

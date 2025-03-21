@@ -11,8 +11,8 @@
                 <i class='bx bx-log-out'></i>
             </button>
 
-            <button type="button" id="profile" @click="profile">
-                <i class='bx bx-user'></i>
+            <button type="button" id="main" @click="main">
+                <i class='bx bx-home'></i>
             </button>
         </div>
 
@@ -92,8 +92,8 @@ export default {
             this.$router.push('/');
         },
 
-        profile(){
-            this.$router.push('/profile');
+        main(){
+            this.$router.push('/mainpage');
         }
     }
 };
@@ -115,7 +115,7 @@ export default {
     left: 0;
 }
 
-#profile{
+#main{
     background-color: #ffffff00;
     color: rgb(255, 255, 255);
     border: none;

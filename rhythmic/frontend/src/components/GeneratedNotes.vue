@@ -11,8 +11,8 @@
                 <i class='bx bx-log-out'></i>
             </button>
 
-            <button type="button" id="profile" @click="profile">
-                <i class='bx bx-user'></i>
+            <button type="button" id="main" @click="main">
+                <i class='bx bx-home'></i>
             </button>
         </div>
 
@@ -89,9 +89,10 @@ export default{
 
         async saveSheet() {
             try {
-                const response = await fetch(this.musicSheet); // Fetch the actual PDF file
-                const blob = await response.blob(); // Convert response to Blob
-                const file = new File([blob], "music_sheet.pdf", { type: "application/pdf" }); // Create a File object
+                const response = await fetch(this.musicSheet); 
+                // **********************
+                const blob = await response.blob(); 
+                const file = new File([blob], "music_sheet.pdf", { type: "application/pdf" }); 
 
                 let formData = new FormData();
                 formData.append("song", this.songName);
@@ -125,8 +126,8 @@ export default{
             this.$router.push('/');
         },
 
-        profile(){
-            this.$router.push('/profile');
+        main(){
+            this.$router.push('/mainpage');
         }
 
     }
@@ -159,7 +160,7 @@ h1{
     left: 0;
 }
 
-#profile{
+#main{
     background-color: #ffffff00;
     color: rgb(255, 255, 255);
     border: none;
