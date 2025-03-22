@@ -17,6 +17,7 @@ urlpatterns = [
     path('getmusicsheet/<int:songId>/', views.getMusicSheet, name='getMusicSheet'),
     path('forgotcredentials/', views.forgotCredentials, name='forgotCredentials'),
     path('resetpassword/', views.resetPassword, name='ResetPassword'),
+    path('deletesong/<int:songId>/', views.deleteSong, name='deleteSong'),
 ]
 
 

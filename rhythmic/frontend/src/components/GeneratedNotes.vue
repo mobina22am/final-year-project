@@ -89,33 +89,43 @@ export default{
 
         async saveSheet() {
             try {
-                const response = await fetch(this.musicSheet); 
-                // **********************
-                const blob = await response.blob(); 
-                const file = new File([blob], "music_sheet.pdf", { type: "application/pdf" }); 
+                if (!this.musicSheet) {
+                    alert("No music sheet available to save.");
+                    return;
+                }
 
+                // Fetch the PDF file from the backend
+                const response = await fetch(`http://localhost:8000${this.musicSheet}`); 
+                const blob = await response.blob(); 
+                const file = new File([blob], `${this.songName}.pdf`, { type: "application/pdf" }); 
+
+                // Create FormData and append data
                 let formData = new FormData();
                 formData.append("song", this.songName);
                 formData.append("artist", this.artistName);
                 formData.append("instrument", this.instrument);
                 formData.append("pdfFile", file); // Attach the actual file
 
+                console.log(file)
+
+                // Send the request to save the music sheet
                 const saveResponse = await axios.post('http://localhost:8000/savemusicsheet', formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                     withCredentials: true
                 });
 
                 if (saveResponse.status === 201) {
-                    alert('Music sheet saved successfully!');
+                    alert("Music sheet saved successfully!");
                 } else {
                     alert(saveResponse.data.error);
                 }
             } 
             
             catch (error) {
-                alert(error.response?.data?.error || 'Saving music sheet failed.');
+                alert(error.response?.data?.error || "Saving music sheet failed.");
             }
         },
+
 
         back(){
             this.$router.push('/chooseinstrument');

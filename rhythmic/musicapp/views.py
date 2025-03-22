@@ -19,6 +19,7 @@ import matplotlib
 matplotlib.use('Agg')
 import re
 import base64
+import magic 
 from music21 import environment
 from django.views.decorators.clickjacking import xframe_options_exempt
 from django.shortcuts import render
@@ -590,32 +591,40 @@ def generatedNotes(request):
 
 
 
+
+
 @csrf_exempt
 @login_required
 def saveMusicSheet(request):
     if request.method == "POST":
         try:
-            # Get the form data and file
             songName = request.POST.get("song")
             artistName = request.POST.get("artist")
             instrument = request.POST.get("instrument")
-            pdfFile = request.FILES.get("pdfFile")  # Get the file from the form data
+            pdfFile = request.FILES.get("pdfFile")
 
             if not songName or not artistName or not pdfFile:
                 return JsonResponse({"error": "Missing required fields"}, status=400)
 
-            # Check if the song is already stored
-            if StoredSongs.objects.filter(user=request.user, name=songName, artist=artistName, instrument=instrument).exists():
-                return JsonResponse({"error": "Music sheet already stored"}, status=409)
+            # Ensure it's a valid PDF
+            mime = magic.Magic(mime=True)
+            file_type = mime.from_buffer(pdfFile.read(2048))  # Read first 2KB to check type
+            pdfFile.seek(0)  # Reset file pointer after reading
 
-            # Save the stored song record
+            if file_type != "application/pdf":
+                return JsonResponse({"error": "Invalid file type. Please upload a PDF."}, status=400)
+
+            # Read the entire PDF file as binary data
+            pdf_data = pdfFile.read()
+
+            # Store it in the database
             storedSong = StoredSongs.objects.create(
                 user=request.user,
                 name=songName,
                 artist=artistName,
                 instrument=instrument,
                 details=f"Music sheet for {songName} by {artistName}",
-                pdfFile=pdfFile  # Save the file directly (don't use read())
+                pdfFile=pdf_data,  # Store binary data in DB
             )
 
             return JsonResponse({"message": "Music sheet stored successfully", "storedSongId": storedSong.id}, status=201)
@@ -641,22 +650,34 @@ def getSavedSongs(request):
 
 
 
+
 @login_required
 def getMusicSheet(request, songId):
-    if request.method == "GET":
+    storedSong = get_object_or_404(StoredSongs, id=songId, user=request.user)
+
+    if not storedSong.pdfFile:
+        return JsonResponse({"error": "No PDF found for this song"}, status=404)
+
+    response = HttpResponse(storedSong.pdfFile, content_type="application/pdf")
+    response["Content-Disposition"] = f'inline; filename="{storedSong.name}.pdf"'
+    return response
+
+
+@csrf_exempt
+@login_required
+def deleteSong(request, songId):
+    if request.method == "DELETE":
         try:
+            # Retrieve the stored song and ensure it's owned by the current user
             storedSong = get_object_or_404(StoredSongs, id=songId, user=request.user)
+            
+            # Delete the song record
+            storedSong.delete()
 
-            if not storedSong.pdfFile:
-                return JsonResponse({"error": "No PDF found for this song"}, status=404)
-
-            response = HttpResponse(storedSong.pdfFile, content_type='application/pdf')
-            response['Content-Disposition'] = f'inline; filename="{storedSong.name}.pdf"'
-            return response
-        
+            return JsonResponse({"message": "Music sheet deleted successfully."}, status=200)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
-        
+    
     return JsonResponse({"error": "Invalid request method"}, status=405)
 
 

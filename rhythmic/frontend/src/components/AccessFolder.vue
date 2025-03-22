@@ -32,12 +32,18 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="song in storedSongs" :key="song.id">
-                        <td colspan="3">
+                    <tr v-for="song in storedSongs" :key="song.id" class="songRows">
+                        <td class="filesTd">
                             <button type="button" class="files" @click="viewPdf(song.id)">
                                 <p>{{ song.name }}</p>
                                 <p>{{ song.artist }}</p>
                                 <p>{{ song.instrument}}</p>
+                            </button>
+                        </td>
+
+                        <td class="deleteTd">
+                            <button type="button" id="delete" @click="deleteFile(song.id)">
+                                <i class='bx bx-trash'></i>
                             </button>
                         </td>
                     </tr>
@@ -82,6 +88,24 @@ export default {
             const pdfUrl = `http://localhost:8000/getmusicsheet/${songId}`;
             window.open(pdfUrl, "_blank");  // Open in a new tab
         },
+
+
+        async deleteFile(songId) {
+            try {
+                const response = await axios.delete(`http://localhost:8000/deletesong/${songId}`, { withCredentials: true });
+
+                if (response.status === 200) {
+                    // Remove the deleted song from the array
+                    this.storedSongs = this.storedSongs.filter(song => song.id !== songId);
+                    alert('Music sheet deleted successfully.');
+                } else {
+                    alert('Failed to delete the music sheet.');
+                }
+            } catch (error) {
+                alert(error.response?.data?.error || 'Failed to delete the song.');
+            }
+        },
+
 
         back(){
             this.$router.push('/mainpage');
@@ -158,6 +182,23 @@ table {
     width: 100%;
 }
 
+.songRows{
+    display: flex;
+    width: 100%;
+    background-color: white;
+    border-radius: 20px;
+    margin-bottom: 10px;
+}
+
+.filesTd{
+    width: 95%;
+    margin-right: 20px;
+}
+
+.deleteTd{
+    margin-right: 20px;
+}
+
 .files{
     width: 100%;
     background-color: #ffffff;
@@ -175,8 +216,20 @@ table {
     background-color: #e0e0e0;
 }
 
+#delete{
+    border: none;
+    background-color: white;
+    font-size: 30px;
+    border-radius: 20px;
+}
+
+#delete:hover{
+    background-color: red;
+}
+
 td {
     padding: 0;
+    display: flex;
 }
 
 thead{
@@ -193,8 +246,9 @@ thead{
     justify-content: space-between;
     padding: 15px;
     padding-left: 30px;
-    padding-right: 30px;
+    padding-right: 100px;
     font-size: 18px;
+    margin-bottom: 5px;
 }
 
 #back{
