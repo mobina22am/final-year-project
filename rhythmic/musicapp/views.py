@@ -4,8 +4,6 @@ from django.http import JsonResponse, HttpResponse
 from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_exempt
 from .models import User, StoredSongs
-import matplotlib.pyplot as plt
-from music21 import stream, note, meter, converter, layout
 import json
 import librosa
 import pretty_midi
@@ -17,16 +15,12 @@ import glob
 import shutil
 import matplotlib
 matplotlib.use('Agg')
-import re
-import base64
 import magic 
 from music21 import environment
 from django.views.decorators.clickjacking import xframe_options_exempt
-from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.core.files.storage import default_storage
-from django.core.files.base import ContentFile
 from django.contrib.auth.hashers import make_password
 # from spleeter.separator import Separator
 # import soundfile as sf
@@ -34,6 +28,13 @@ from django.contrib.auth.hashers import make_password
 # from pydub import AudioSegment
 # from io import BytesIO
 # import numpy as np
+# import re
+# import base64
+# from music21 import stream, note, meter, converter, layout
+# from django.core.files.base import ContentFile
+# from django.shortcuts import render
+# import matplotlib.pyplot as plt
+
 
 tempM21Dir = '/Users/mobinaaghaeimaleki/Documents/GitHub/final-year-project/rhythmic/analysedInstruments/music21_temp'
 
