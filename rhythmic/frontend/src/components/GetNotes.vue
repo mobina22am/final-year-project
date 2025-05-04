@@ -1,3 +1,4 @@
+<!-- This page will display options for the user to find a song -->
 <template>
 
     <head>
@@ -6,6 +7,7 @@
 
     <div id="home">
 
+        <!-- The icons at the top to allow the user to logout or come back to the main page -->
         <div id="icons">
             <button type="button" id="logout" @click="logout">
                 <i class='bx bx-log-out'></i>
@@ -20,6 +22,7 @@
 
         <form>
 
+            <!-- Redirect buttons -->
             <div id="getNotesButtons">
                 <button type="button" id="find" @click="findASong">Find A Song</button>
                 <button type="button" id="suggest" @click="suggestASong">Suggest A Song</button>
@@ -37,6 +40,7 @@
 export default {
     name: 'GetNotes',
 
+    // Redirect functionalities
     methods: {
         findASong(){
             this.$router.push('/findasong');
@@ -65,7 +69,6 @@ export default {
 
 
 <style scoped>
-
 
 h1{
     font-size: 4em;

@@ -1,6 +1,9 @@
+<!-- This page is for the login functionality of the app -->
 <template>
     <div id="login">
         <h1>Log In</h1>
+
+        <!-- The form necessary to get data for login -->
         <form method="post" @submit.prevent="submitForm">
 
             <div class="inputs">
@@ -25,15 +28,13 @@
 </template>
 
 
-
-
-
 <script>
 import axios from 'axios';
 import router from '../router';
 
 export default{
     name: 'LogIn',
+
     data(){
         return{
             form: {
@@ -42,6 +43,7 @@ export default{
             }
         };
     },
+
     methods: {
 
         async submitForm(){
@@ -49,8 +51,10 @@ export default{
             event.preventDefault();
 
             try{
+                // Sending the data to the backend
                 const response = await axios.post('http://localhost:8000/login/', this.form, { withCredentials: true })
 
+                // Getting response from the backend
                 if(response.status === 200){
                     alert('You have successfully logged in');
 
@@ -61,6 +65,7 @@ export default{
                 }
             }
 
+            // Displaying the error message
             catch(error){
                 if (error.response && error.response.data.error){
                     alert(error.response.data.error);
@@ -72,10 +77,12 @@ export default{
             }
         },
 
+        // The back button function
         backFunction(){
             router.push('/');
         },
 
+        // When the forgotten credential option is chosen redirects the user
         forgotten(){
             router.push('/forgotcredentials');
         }
@@ -85,9 +92,7 @@ export default{
 </script>
 
 
-
 <style scoped>
-
 
 h1{
     font-size: 3em;
@@ -117,7 +122,6 @@ form{
 #forgotten:hover{
     color: white;
 }
-
 
 #back, #submit{
     background-color: #ffffff;

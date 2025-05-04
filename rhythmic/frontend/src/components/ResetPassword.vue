@@ -1,6 +1,9 @@
+<!-- This page allows the user to reset their password -->
 <template>
     <div id="reset-password">
         <h1>Reset Password</h1>
+
+        <!-- The form to get data from the user -->
         <form @submit.prevent="submitForm">
             
             <div class="inputs">
@@ -32,6 +35,7 @@
     </div>
 </template>
 
+
 <script>
 import axios from 'axios';
 import router from '../router';
@@ -48,19 +52,28 @@ export default {
             }
         };
     },
+
     methods: {
         async submitForm() {
             try {
+                // Sending the data to the backend
                 const response = await axios.post('http://localhost:8000/resetpassword/', this.form);
 
                 if (response.status === 200) {
                     alert(response.data.message);
-                    router.push('/');  // Redirect back to login page
+                    // Redirect back to login page when the password is reset
+                    router.push('/');  
                 }
-            } catch (error) {
+
+            }
+            
+            // Displaying errors
+            catch (error) {
                 alert(error.response?.data?.error || "Error processing request");
             }
         },
+
+        // Back button functionality
         goBack() {
             router.push('/login');
         }
@@ -69,11 +82,7 @@ export default {
 </script>
 
 
-
-
-
 <style scoped>
-
 
 h1{
     font-size: 3em;
@@ -95,7 +104,6 @@ form{
     margin-top: 3%;
     grid-gap: 35%;
 }
-
 
 #back, #submit{
     background-color: #ffffff;

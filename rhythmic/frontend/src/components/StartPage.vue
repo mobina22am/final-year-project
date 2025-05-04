@@ -1,7 +1,9 @@
+<!-- This page is the first page of the application -->
 <template>
     
     <h1>WELCOME TO RHYTHMIC</h1>
 
+    <!-- Options on the page -->
     <div id="startPageButtons">
         <button id="logInButton" @click="loginDirect">Log in</button>
         <button id="signUpButton" @click="signUpDirect">Sign Up</button>
@@ -16,6 +18,7 @@ import router from '../router';
 export default{
     name: 'StartPage',
 
+    // Redirection function of each of the buttons on the page
     methods: {
         loginDirect(){
             router.push('/login');
@@ -30,7 +33,6 @@ export default{
 </script>
 
 
-
 <style>
 
 html{
@@ -42,7 +44,6 @@ h1{
     color: white;
     margin-top: 10%;
 }
-
 
 #startPageButtons{
     display: grid;

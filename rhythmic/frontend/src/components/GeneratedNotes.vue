@@ -1,3 +1,4 @@
+<!-- This page displays the generated music sheet -->
 <template>
 
     <head>
@@ -6,6 +7,7 @@
 
     <div id="home">
 
+        <!-- The icons at the top to allow the user to logout or come back to the main page -->
         <div id="icons">
             <button type="button" id="logout" @click="logout">
                 <i class='bx bx-log-out'></i>
@@ -16,19 +18,20 @@
             </button>
         </div>
 
-
         <h1>Generated Notes For "{{ songName }}" By "{{ artistName }}" For "{{ instrument }}"</h1>
         
+        <!-- If there is any music sheet available, the PDF will be displayed -->
         <div v-if="musicSheet">
             <iframe v-if="musicSheet" :src="'http://localhost:8000' + musicSheet" width="100%" height="550px"></iframe>
         </div>
 
         <button type="button" id="back" @click="back">Back</button>
+
+        <!-- The save button -->
         <button type="button" id="saveSheet" @click="saveSheet">Save</button>
 
     </div>
 </template>
-
 
 
 <script>
@@ -48,31 +51,36 @@ export default{
 
     async mounted(){
         try{
+            // Getting the song data from the local storage
             const storedSongName = localStorage.getItem('songName');
             const storedArtistName = localStorage.getItem('artistName');
             const storedInstrument = localStorage.getItem('instrument');
 
+            // Check to see if there is any data missing
             if (!storedSongName || !storedArtistName || !storedInstrument) {
                 alert('Song, artist, or instrument not found. Please try again.');
             }
 
+            // Setting the song data from the local storage to variables
             this.songName = storedSongName;
             this.artistName = storedArtistName;
             this.instrument = storedInstrument;
-
-
             
+            // Sending a request to the backend to get the PDF file
             const response = await axios.get('http://localhost:8000/generatednotes', {params: {song: this.songName, artist: this.artistName, instrument: this.instrument}, withCredentials: true});
 
+            // Check the response
             if (response.status === 200 && response.data.musicSheet) {
                 this.musicSheet = response.data.musicSheet;
             }
 
+            // Display the error
             else {
                 alert('generating notes failed');
             }
         }
 
+        // Display the error
         catch(error){
             if (error.response || error.response.data.error) {
                 alert(error.response.data.error);
@@ -82,51 +90,61 @@ export default{
                 alert('generating notes failed.');
             }
         }
-
     },
 
     methods: {
 
+        // The function will be called to save the music sheet
         async saveSheet() {
+
             try {
+
+                // Check to see if the music sheet is available
                 if (!this.musicSheet) {
                     alert("No music sheet available to save.");
                     return;
                 }
 
-                // Fetch the PDF file from the backend
+                // Get the music sheet PDF file
                 const response = await fetch(`http://localhost:8000${this.musicSheet}`); 
                 const blob = await response.blob(); 
                 const file = new File([blob], `${this.songName}.pdf`, { type: "application/pdf" }); 
 
-                // Create FormData and append data
+                // Create FormData and append data to be stored in the database
                 let formData = new FormData();
                 formData.append("song", this.songName);
                 formData.append("artist", this.artistName);
                 formData.append("instrument", this.instrument);
-                formData.append("pdfFile", file); // Attach the actual file
+
+                // Attach the actual PDF file
+                formData.append("pdfFile", file); 
 
                 console.log(file)
 
-                // Send the request to save the music sheet
+                // Send the POST request to save the music sheet
                 const saveResponse = await axios.post('http://localhost:8000/savemusicsheet', formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                     withCredentials: true
                 });
 
+                // Check the response
                 if (saveResponse.status === 201) {
                     alert("Music sheet saved successfully!");
-                } else {
+                } 
+                
+                // Displaying error
+                else {
                     alert(saveResponse.data.error);
                 }
             } 
             
+            // Displaying error
             catch (error) {
                 alert(error.response?.data?.error || "Saving music sheet failed.");
             }
         },
 
-
+        // Redirecting functionalities
         back(){
             this.$router.push('/chooseinstrument');
         },
@@ -147,8 +165,6 @@ export default{
 
 
 <style scoped>
-
-
 
 h1{
     font-size: 40px;
@@ -199,7 +215,6 @@ h1{
     right: 65%;
     margin-bottom: 2%;
 }
-
 
 #saveSheet{
     background-color: #ffffff;

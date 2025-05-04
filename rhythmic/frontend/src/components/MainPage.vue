@@ -1,3 +1,4 @@
+<!-- This is the main page of the application -->
 <template>
 
     <head>
@@ -6,6 +7,7 @@
 
     <div id="home">
 
+        <!-- The icons at the top to allow the user to logout or come back to the main page -->
         <div id="icons">
             <button type="button" id="logout" @click="logout">
                 <i class='bx bx-log-out'></i>
@@ -20,6 +22,7 @@
 
         <form>
 
+            <!-- Options of the main page for the users -->
             <div id="homeButtons">
                 <button type="button" id="notes" @click="getNotes">Get Notes</button>
                 <button type="button" id="folders" @click="accessFolders">Access Folder</button>
@@ -43,10 +46,12 @@ export default {
         }
     },
 
+    // Getting the name of the user to be displayed at the top of the page
     mounted(){
         this.user = localStorage.getItem('name');
     },
 
+    // Redirection functionalities
     methods: {
         getNotes(){
             this.$router.push('/getnotes');
@@ -74,9 +79,7 @@ export default {
 </script>
 
 
-
 <style scoped>
-
 
 h1{
     font-size: 4em;

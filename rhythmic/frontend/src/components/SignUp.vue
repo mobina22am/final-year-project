@@ -1,6 +1,9 @@
+<!-- This page is for the user to sign up -->
 <template>
     <div id="signUp">
         <h1>Sign Up</h1>
+
+        <!-- The form to get all of the necessary information from the user -->
         <form method="post" @submit.prevent="submitForm">
 
             <div class="inputs">
@@ -66,15 +69,18 @@ export default{
         async submitForm(){
 
             event.preventDefault();
-
+            
+            // Password should match for the form to be submitted
             if(this.form.password !== this.form.confirmPassword){
                 alert('Passwords do not match');
                 return;
             }
 
             try {
+                // Sending the input data to the backend
                 const response = await axios.post('http://localhost:8000/signup/', this.form, {withCredentials: true});
 
+                // Getting response from the backend
                 if (response.status === 201){
                     alert('User created successfully');
 
@@ -85,10 +91,11 @@ export default{
                 } 
             }
 
+            // Passing the error message
             catch(error){
 
                 if (error.response && error.response.data.error) {
-                    alert(error.response.data.error); // Show backend error message
+                    alert(error.response.data.error); 
                 } 
                 
                 else {
@@ -97,6 +104,7 @@ export default{
             }
         },
 
+        // Back button functionality
         backFunction(){
             router.push('/');
         }
@@ -106,9 +114,7 @@ export default{
 </script>
 
 
-
 <style scoped>
-
 
 h1{
     font-size: 3em;

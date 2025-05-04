@@ -1,7 +1,9 @@
+<!-- Forgotten credentials page -->
 <template>
     <div id="forgotCredentials">
         <h1>Forgot Username or Password</h1>
 
+        <!-- The form necessary to get data from the user -->
         <form @submit.prevent="submitForm">
             
             <div class="inputs">
@@ -29,6 +31,7 @@
     </div>
 </template>
 
+
 <script>
 import axios from 'axios';
 import router from '../router';
@@ -44,6 +47,9 @@ export default {
                 birthday: '',
             },
 
+            // These variables are to or not to display the forgotten password page 
+            // When noanswer is true, the username has been displayed and the submit button will disappear
+            // When answer is true, Reset Password button will be displayed to allow the user reset their forgotten password
             answer: false,
             noanswer: true
         };
@@ -52,31 +58,36 @@ export default {
     methods: {
         async submitForm() {
             try {
+                // Sending the data to the backend
                 const response = await axios.post('http://localhost:8000/forgotcredentials/', this.form);
 
+                // Getting a response
                 if (response.status === 200) {
                     alert(response.data.message);
                     this.answer = true
                     this.noanswer = false
                 }
-            } catch (error) {
+
+            } 
+            
+            // Displaying error 
+            catch (error) {
                 alert(error.response?.data?.error || "Error processing request");
             }
         },
 
+        // Back button functionality
         back() {
             router.push('/login');
         },
 
+        // Redirect the user to the reset password page
         reset(){
             router.push('/resetpassword');
         }
     }
 };
 </script>
-
-
-
 
 
 <style scoped>

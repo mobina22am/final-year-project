@@ -1,6 +1,9 @@
+<!-- This page is for the users to update their profile -->
 <template>
     <div id="profile">
         <h1>Profile</h1>
+
+        <!-- The form to display and get data along with validations -->
         <form method="post" @submit.prevent="submitForm">
 
             <div class="inputs">
@@ -73,11 +76,12 @@ export default{
         };
     },
 
-
     async mounted() {
         try {
+            // Get data from the backend, restored from the database
             const response = await axios.get('http://localhost:8000/profile/', {withCredentials: true});
 
+            // Setting the variables values to the data gotten from the backend
             this.form = response.data;
 
             if (response.status === 200) {
@@ -85,6 +89,7 @@ export default{
             }
         } 
 
+        // Didplaying error data
         catch (error) {
             if (error.response && error.response.data.error) {
                 alert(error.response.data.error); 
@@ -102,6 +107,7 @@ export default{
 
             event.preventDefault();
 
+            // The passwords should match to allow the form to be submitted
             if(this.form.password !== this.form.confirmPassword){
                 alert('Passwords do not match');
                 return;
@@ -109,6 +115,7 @@ export default{
 
             try {
 
+                // Getting data of the form and storethem in variables
                 const newData = {
                     name: this.form.name,
                     username: this.form.username,
@@ -117,31 +124,36 @@ export default{
                     oldPassword: this.form.oldPassword,
                 };
 
+                // Check to see if the user has put a new password
                 if (this.form.password) {
                     newData.password = this.form.password;
                 }
 
+                // Send request to the backend
                 const response = await axios.put('http://localhost:8000/profile/', newData, {withCredentials: true});
 
+                // Get a response
                 if (response.status === 200){
                     alert('Profile Update successfully');
 
                     localStorage.setItem('token', response.data.token);
                     localStorage.setItem('name', response.data.name);
 
+                    // Going back to the main page after updating
                     router.push('/mainpage');
                 } 
 
+                // Let the user know the password is wrong
                 if (response.status === 400){
                     alert('Old password is incorrect');
                 }
             }
-        
 
+            // Dispalying the error message
             catch(error){
 
                 if (error.response && error.response.data.error) {
-                    alert(error.response.data.error); // Show backend error message
+                    alert(error.response.data.error); 
                 } 
                 
                 else {
@@ -150,6 +162,7 @@ export default{
             }
         },
 
+        // Back button functionality
         backFunction(){
             router.push('/');
         }
@@ -159,9 +172,7 @@ export default{
 </script>
 
 
-
 <style scoped>
-
 
 h1{
     font-size: 3em;

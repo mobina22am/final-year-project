@@ -1,3 +1,4 @@
+<!-- The Page to allow the user access their folder -->
 <template>
 
     <head>
@@ -6,6 +7,7 @@
 
     <div id="home">
 
+        <!-- The icons at the top to allow the user to logout or come back to the main page -->
         <div id="icons">
             <button type="button" id="logout" @click="logout">
                 <i class='bx bx-log-out'></i>
@@ -16,11 +18,11 @@
             </button>
         </div>
 
-
         <h1>Saved Music Sheets</h1>
 
         <div id="tableDiv">
 
+            <!-- The table that will display the list of the songs stored if the storedSongs list is not empty-->
             <table v-if="storedSongs.length > 0">
                 <thead>
                     <tr>
@@ -32,6 +34,8 @@
                     </tr>
                 </thead>
                 <tbody>
+
+                    <!-- Looping through the list storedSongs and creating a tr element for each -->
                     <tr v-for="song in storedSongs" :key="song.id" class="songRows">
                         <td class="filesTd">
                             <button type="button" class="files" @click="viewPdf(song.id)">
@@ -41,6 +45,7 @@
                             </button>
                         </td>
 
+                        <!-- The button to allow deleting of the music sheet -->
                         <td class="deleteTd">
                             <button type="button" id="delete" @click="deleteFile(song.id)">
                                 <i class='bx bx-trash'></i>
@@ -55,6 +60,7 @@
         <button @click="back" id="back">Main Page</button>
     </div>
 </template>
+
 
 <script>
 import axios from 'axios';
@@ -71,42 +77,63 @@ export default {
 
     async mounted() {
         try {
+            // Sending request to get the list of the songs stored in the database
             const response = await axios.get('http://localhost:8000/getsavedsongs', { withCredentials: true });
 
+            // Check to see if there is a response
             if (response.status === 200) {
                 this.storedSongs = response.data.songs;
-            } else {
+            } 
+            
+            else {
                 alert('Failed to load saved sheets.');
             }
-        } catch (error) {
+        } 
+        
+        // Didplaying the errors
+        catch (error) {
             alert(error.response?.data?.error || 'Failed to fetch saved songs.');
         }
     },
     
     methods: {
+
+        // The function will display the music sheet
         viewPdf(songId) {
+
+            // Getting the music sheet url from the backend
             const pdfUrl = `http://localhost:8000/getmusicsheet/${songId}`;
-            window.open(pdfUrl, "_blank");  // Open in a new tab
+
+            // Open the music sheet PDF file in a new tab
+            window.open(pdfUrl, "_blank");  
         },
 
-
+        // The function will delete the requested song
         async deleteFile(songId) {
             try {
+                // Sending the request to the backend
                 const response = await axios.delete(`http://localhost:8000/deletesong/${songId}`, { withCredentials: true });
 
+                // Gettinf the response
                 if (response.status === 200) {
                     // Remove the deleted song from the array
                     this.storedSongs = this.storedSongs.filter(song => song.id !== songId);
+
                     alert('Music sheet deleted successfully.');
-                } else {
+                } 
+                
+                else {
                     alert('Failed to delete the music sheet.');
                 }
-            } catch (error) {
+            } 
+            
+            // Display the error message
+            catch (error) {
                 alert(error.response?.data?.error || 'Failed to delete the song.');
             }
         },
 
-
+        // Redirecting functionalities
         back(){
             this.$router.push('/mainpage');
         },
@@ -122,6 +149,7 @@ export default {
     }
 };
 </script>
+
 
 <style scoped>
 
@@ -279,4 +307,5 @@ thead{
     font-size: 20px;
     width: 100%;
 }
+
 </style>

@@ -16,7 +16,6 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
@@ -28,12 +27,9 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 SESSION_ENGINE = 'django.contrib.sessions.backends.db' 
 
-
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -42,14 +38,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'musicapp',
-    # *************
     'corsheaders',
 ]
 
-
-# *************
 AUTH_USER_MODEL = 'musicapp.User'
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -59,25 +51,18 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    # *************
     'corsheaders.middleware.CorsMiddleware', 
     'django.middleware.common.CommonMiddleware',
 ]
 
-# *************
 CORS_ALLOW_CREDENTIALS = True
 
-# *************
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8080", 
 ]
 
-
-# *************
 CSRF_TRUSTED_ORIGINS = ["http://localhost:8080"]
 
-
-# *************
 CORS_ALLOW_HEADERS = [
     'content-type',
     'authorization',
@@ -85,7 +70,6 @@ CORS_ALLOW_HEADERS = [
     'accept',
     'origin',
 ]
-
 
 ROOT_URLCONF = 'rhythmic.urls'
 
@@ -107,7 +91,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'rhythmic.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
@@ -117,7 +100,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -137,7 +119,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
@@ -149,7 +130,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
@@ -160,10 +140,6 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
-
-
-# **************************************
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 

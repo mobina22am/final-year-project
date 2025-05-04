@@ -1,3 +1,4 @@
+<!-- This page lets the users to search for a song and choose one -->
 <template>
 
     <head>
@@ -6,6 +7,7 @@
 
     <div id="home">
 
+        <!-- The icons at the top to allow the user to logout or come back to the main page -->
         <div id="icons">
             <button type="button" id="logout" @click="logout">
                 <i class='bx bx-log-out'></i>
@@ -19,6 +21,8 @@
 
         <h1>Find A Song</h1>
 
+        <!-- This pop up window will display when the user chose the song they wanted -->
+        <!-- The pop page lets the user know the app is working on their request -->
         <div id="popUpWindow" v-if="popup">
             <div id="insidePopUp">
                 <h2>Instrument Detection Started</h2>
@@ -34,13 +38,17 @@
             </div>
         </div>
 
+        <!-- The form to get song detail from the user -->
         <form @submit.prevent="search">
             <input type="text" v-model="userInput" placeholder="Type In The Song Detail" id="searchInput" required>
             <button type="button" id="back" @click="back" class="findASongButtons">Back</button>
             <button type="submit" id="search" class="findASongButtons">Search</button>
         </form>
 
+        <!-- The table to display the list of the songs found -->
         <div id="tableDiv">
+
+            <!-- The table will only show of the list variable, songs, is not empty -->
             <table v-if="songs.length > 0" id="songsTable">
                 <thead>
                     <tr>
@@ -52,6 +60,7 @@
                 </thead>
 
                 <tbody> 
+                    <!-- Looping through the songs list and creating a tr element for each of them -->
                     <tr v-for="(song, index) in songs" :key="index">
                         <td colspan="2">
                             <button type="button" class="songs" @click="songChosen(song)">
@@ -84,26 +93,30 @@ export default {
     },
 
     async mounted(){
+        // Getting the Spotify token to search for a song
         this.apiToken = await this.getSpotifyToken();
     },
-
     
     methods: {
 
-
+        // The function is triggered when the user presses the Search button to find a song
         async search(){
+            // Check if there is any input
             if (this.userInput === ''){
                 return;
             }
 
+            // Check if the Spotify API token is avalaible
             if (this.apiToken === ''){
                 this.apiToken = await this.getSpotifyToken();
             }
 
+            // Getting the list of the songs from the API
             const response = await fetch(`https://api.spotify.com/v1/search?q=${encodeURIComponent(this.userInput)}&type=track&limit=50`, { headers: { Authorization: `Bearer ${this.apiToken}` }});
 
             const data = await response.json();
 
+            // Adding the data to the songs list variable
             if (data.tracks && data.tracks.items) {
                 this.songs = data.tracks.items.map(track => ({name: track.name, artist: track.artists.map(artist => artist.name).join(', ')}));
             } 
@@ -114,6 +127,7 @@ export default {
 
         },
 
+        // The function to get the Spotify token with all of the credentials inside it
         async getSpotifyToken() {
             const clientId = '14d9c89768f742eba1002eee652142c1';
             const clientSecret = '3899528fce97481cb861f4c058fc44fe';
@@ -127,39 +141,42 @@ export default {
             return data.access_token;
         },
 
-
+        // This function sends the chosen song details to the backend for the next stage
         async songChosen(song){
             try {
 
+                // popup set to true to let the pop up page appear
                 this.popup = true;
                 this.songName = song.name;
                 this.artistName = song.artist;
 
-                
-                // add a confirm here before downloading the song
-
+                // Sending the POST request to the backecnd with the song's details
                 const response = await fetch("http://localhost:8000/findinstruments", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({name: song.name, artist: song.artist})
                 });
 
+                // Getting a response
                 const data = await response.json();
 
+                // Displaying error
                 if (data.error) {
                     console.error("Error in finding instruments:", data.error);
                     return;
                 }
 
+                // Redirecting to the next page after the response is received from the backend
                 this.$router.push('/chooseinstrument');
             } 
             
+            // Displaying error
             catch (error) {
                 console.error("Error in finding instruments:", error);
             }
         },
 
-
+        // Redirecting functionalities
         back(){
             this.$router.push('/getnotes');
         },
@@ -179,7 +196,6 @@ export default {
 
 
 <style scoped>
-
 
 h1{
     font-size: 30px;

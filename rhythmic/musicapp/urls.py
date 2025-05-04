@@ -4,6 +4,7 @@ from . import views
 from django.conf import settings
 from django.conf.urls.static import static
 
+# All the possible paths in the application and their related views.py function to handle the request
 urlpatterns = [
     path('', views.home, name='home'),
     path('signup/', views.UserSignUp, name='signUp'),
@@ -20,10 +21,9 @@ urlpatterns = [
     path('deletesong/<int:songId>/', views.deleteSong, name='deleteSong'),
 ]
 
-
 if settings.DEBUG:
-    # Serve user-uploaded files
+    # Handles the files that has been uploaded by the user
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     
-    # Serve generated music sheets separately
+    # Handles generated music sheets separately and independently
     urlpatterns += static("generatedMusicSheets/", document_root=settings.GENERATED_SHEETS_DIR)

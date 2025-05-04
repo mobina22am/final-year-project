@@ -1,3 +1,4 @@
+<!-- This page is for the user to choose their instrumnets -->
 <template>
 
     <head>
@@ -6,6 +7,7 @@
 
     <div id="home">
 
+        <!-- The icons at the top to allow the user to logout or come back to the main page -->
         <div id="icons">
             <button type="button" id="logout" @click="logout">
                 <i class='bx bx-log-out'></i>
@@ -18,7 +20,8 @@
 
         <h1>Choose Instrument</h1>
 
-
+        <!-- This pop up window will display when the user chose the instrument they wanted -->
+        <!-- The pop page lets the user know the app is working on their request -->
         <div id="popUpWindow" v-if="popup">
             <div id="insidePopUp">
                 <h2>Note Generation Started</h2>
@@ -33,7 +36,10 @@
             </div>
         </div>
 
+        <!-- The table to display the list of the instruments found -->
         <div id="tableDiv">
+
+            <!-- The table will only show of the list variable, instruments, is not empty -->
             <table v-if="instruments.length > 0" id="instrumentsTable">
 
                 <thead>
@@ -43,6 +49,7 @@
                 </thead>
 
                 <tbody> 
+                    <!-- Looping through the instruments list and creating a tr element for each of them-->
                     <tr v-for="(instrument, index) in instruments" :key="index">
                         <td>
                             <button type="button" class="instruments" @click="instrumentChosen(instrument)">
@@ -79,19 +86,23 @@ export default{
     async mounted(){
 
         try{
+            // Getting the list of the instrument detected by the backend
             const response = await axios.get('http://localhost:8000/findinstruments', {withCredentials: true});
 
+            // Checking the response
             if (response.status === 200) {
                 this.song = response.data.song;
                 this.artist = response.data.artist;
                 this.instruments = response.data.instruments || [];
             }
 
+            // Displaying the error
             else {
                 alert('Instruments retrieval failed. Please try again.');
             }
         }
 
+        // Displaying the error
         catch(error){
             if (error.response || error.response.data.error) {
                 alert(error.response.data.error);
@@ -107,39 +118,48 @@ export default{
 
     methods: {
 
+        // The funcion gets triggered when an instrument is chosen
         async instrumentChosen(instrument){
 
             try{
+
+                // popup set to true to let the pop up page appear
                 this.popup = true,
 
                 console.log("Request Payload:", {instrument: instrument, song: this.song.name, artist: this.song.artist});
                 
+                // Sending the instrument and details chosen to the backend for the next stage
                 const response = await fetch("http://localhost:8000/generatednotes", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({instrument: instrument, song: this.song.name, artist: this.song.artist})
                 });
 
+                // Getting a response
                 const data = await response.json();
 
+                // Displaying errors
                 if (data.error) {
                     console.error("Error in generating notes:", data.error);
                     return;
                 }
                 
+                // Store data in local storage to be used in the next page
                 localStorage.setItem('songName', this.song.name);
                 localStorage.setItem('artistName', this.song.artist);
                 localStorage.setItem('instrument', instrument);
 
+                // Redirect to the next page
                 this.$router.push('/generatednotes');
             }
 
+            // Displaying errors
             catch(error){
                 console.error("Error in generating notes:", error);
             }
         },
 
-
+        // Redirecting functionalities
         back(){
             this.$router.push('/findasong');
         },
@@ -160,8 +180,6 @@ export default{
 
 
 <style scoped>
-
-
 
 h1{
     font-size: 40px;
@@ -251,7 +269,6 @@ th{
     text-align: center;
 }
 
-
 #back{
     background-color: #ffffff;
     color: black;
@@ -267,8 +284,6 @@ th{
     right: 45%;
     margin-bottom: 2%;
 }
-
-
 
 #popUpWindow{
     background-color: white;
